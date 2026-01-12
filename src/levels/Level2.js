@@ -43,5 +43,13 @@ const gateData = {
 
 // Load level using LevelLoader
 const loader = new LevelLoader();
-export const Level2 = loader.loadFromMatrix(level2Matrix, gateData);
-Level2.name = "Level 2";
+let Level2;
+try {
+    Level2 = loader.loadFromMatrix(level2Matrix, gateData);
+    Level2.name = "Level 2";
+    console.log('Level2 loaded successfully:', Level2);
+} catch (error) {
+    console.error('Error loading Level2:', error);
+    throw error;
+}
+export { Level2 };

@@ -639,10 +639,17 @@ export class Game extends Phaser.Scene {
         if (hasNextLevel) {
             this.input.keyboard.once('keydown-N', () => {
                 const currentIndex = this.levelManager.currentLevelIndex;
+                console.log(`Current level index before nextLevel(): ${currentIndex}`);
+                
+                // Advance to next level
                 const nextLevel = this.levelManager.nextLevel();
+                const newIndex = this.levelManager.currentLevelIndex;
+                
+                console.log(`After nextLevel() - new index: ${newIndex}, level: ${nextLevel ? nextLevel.name : 'null'}`);
+                
                 if (nextLevel) {
-                    console.log(`Advancing from level ${currentIndex} to ${this.levelManager.currentLevelIndex}: ${nextLevel.name}`);
-                    this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
+                    console.log(`Restarting scene with levelIndex: ${newIndex}`);
+                    this.scene.restart({ levelIndex: newIndex });
                 } else {
                     console.error('Failed to advance to next level');
                 }
