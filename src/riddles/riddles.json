@@ -1,0 +1,124 @@
+{
+  "riddles": [
+    {
+      "id": "riddle_001",
+      "question": "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
+      "answers": [
+        "An echo",
+        "A shadow",
+        "A whisper",
+        "A thought"
+      ],
+      "correctAnswer": 0,
+      "hint": "You hear it in mountains and caves"
+    },
+    {
+      "id": "riddle_002",
+      "question": "The more you take, the more you leave behind. What am I?",
+      "answers": [
+        "Footsteps",
+        "Memories",
+        "Money",
+        "Time"
+      ],
+      "correctAnswer": 0,
+      "hint": "You make them when you walk"
+    },
+    {
+      "id": "riddle_003",
+      "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+      "answers": [
+        "A map",
+        "A globe",
+        "A painting",
+        "A dream"
+      ],
+      "correctAnswer": 0,
+      "hint": "You use it to find your way"
+    },
+    {
+      "id": "riddle_004",
+      "question": "What has keys but no locks, space but no room, and you can enter but not go inside?",
+      "answers": [
+        "A keyboard",
+        "A piano",
+        "A door",
+        "A computer"
+      ],
+      "correctAnswer": 0,
+      "hint": "You're using one right now"
+    },
+    {
+      "id": "riddle_005",
+      "question": "I'm tall when I'm young, and short when I'm old. What am I?",
+      "answers": [
+        "A candle",
+        "A tree",
+        "A person",
+        "A building"
+      ],
+      "correctAnswer": 0,
+      "hint": "It burns and gives light"
+    },
+    {
+      "id": "riddle_006",
+      "question": "What has a head, a tail, is brown, and has no legs?",
+      "answers": [
+        "A penny",
+        "A snake",
+        "A worm",
+        "A stick"
+      ],
+      "correctAnswer": 0,
+      "hint": "You can spend it"
+    },
+    {
+      "id": "riddle_007",
+      "question": "What gets wetter the more it dries?",
+      "answers": [
+        "A towel",
+        "A sponge",
+        "A cloth",
+        "A mop"
+      ],
+      "correctAnswer": 0,
+      "hint": "You use it after a shower"
+    },
+    {
+      "id": "riddle_008",
+      "question": "I'm light as a feather, but the strongest person can't hold me for more than a few minutes. What am I?",
+      "answers": [
+        "Your breath",
+        "A cloud",
+        "A thought",
+        "A shadow"
+      ],
+      "correctAnswer": 0,
+      "hint": "You do it all the time"
+    },
+    {
+      "id": "riddle_009",
+      "question": "What has hands but can't clap?",
+      "answers": [
+        "A clock",
+        "A statue",
+        "A robot",
+        "A tree"
+      ],
+      "correctAnswer": 0,
+      "hint": "It tells you the time"
+    },
+    {
+      "id": "riddle_010",
+      "question": "What goes up but never comes down?",
+      "answers": [
+        "Your age",
+        "A balloon",
+        "A rocket",
+        "A bird"
+      ],
+      "correctAnswer": 0,
+      "hint": "It increases every year"
+    }
+  ]
+}
