@@ -2,13 +2,13 @@ import { Game } from './scenes/Game.js';
 
 const config = {
     type: Phaser.AUTO,
-    title: 'Babi is Hungry',
-    description: '',
+    title: 'Basis',
+    description: 'A puzzle-adventure where rules can change',
     parent: 'game-container',
     width: 1280,
     height: 720,
     backgroundColor: '#2c3e50',
-    pixelArt: false,
+    pixelArt: true,
     scene: [
         Game
     ],

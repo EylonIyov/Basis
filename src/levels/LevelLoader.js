@@ -6,6 +6,7 @@
  * 2 = gate
  * 3 = starting position
  * 4 = end goal
+ * 5 = pushable object
  */
 export class LevelLoader {
     constructor() {
@@ -17,21 +18,25 @@ export class LevelLoader {
      * Load a level from matrix format
      * @param {Array<Array<number>>} matrix - 20x15 matrix representing the level
      * @param {Object} gateData - Object mapping gate positions to gate info (id, path, riddleId)
+     * @param {Object} options - Additional level options (theme, pushables metadata, etc.)
      * @returns {Object} Parsed level data
      */
-    loadFromMatrix(matrix, gateData = {}) {
+    loadFromMatrix(matrix, gateData = {}, options = {}) {
         if (!matrix || matrix.length !== this.gridHeight) {
             throw new Error(`Matrix must be ${this.gridHeight} rows tall`);
         }
 
         const level = {
             name: "Level",
+            theme: options.theme || "default",
             gridWidth: this.gridWidth,
             gridHeight: this.gridHeight,
             start: null,
             goal: null,
             gates: [],
-            walls: []
+            walls: [],
+            pushables: [],
+            ruleRiddles: options.ruleRiddles || []
         };
 
         // Parse matrix
@@ -81,6 +86,18 @@ export class LevelLoader {
                         } else {
                             level.goal = { x, y };
                         }
+                        break;
+                    
+                    case 5: // Pushable object
+                        const pushableKey = `${x},${y}`;
+                        const pushableInfo = (options.pushables && options.pushables[pushableKey]) || {
+                            type: 'box'
+                        };
+                        level.pushables.push({
+                            x: x,
+                            y: y,
+                            type: pushableInfo.type || 'box'
+                        });
                         break;
                     
                     default:

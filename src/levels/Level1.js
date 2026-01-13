@@ -43,5 +43,8 @@ const gateData = {
 
 // Load level using LevelLoader
 const loader = new LevelLoader();
-export const Level1 = loader.loadFromMatrix(level1Matrix, gateData);
+export const Level1 = loader.loadFromMatrix(level1Matrix, gateData, {
+    theme: 'default',
+    ruleRiddles: []
+});
 Level1.name = "Level 1";

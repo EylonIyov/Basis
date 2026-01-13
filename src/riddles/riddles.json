@@ -119,6 +119,34 @@
       ],
       "correctAnswer": 0,
       "hint": "It increases every year"
+    },
+    {
+      "id": "rule_wall_air",
+      "type": "rule",
+      "question": "In this realm, solids fade to mist. What was once impassable now invites passage. What transformation has occurred?",
+      "answers": [
+        "Wall is Air",
+        "Air is Wall",
+        "Wall is Solid",
+        "Air is Solid"
+      ],
+      "correctAnswer": 0,
+      "ruleEffect": "wall_is_air",
+      "hint": "Barriers dissolve"
+    },
+    {
+      "id": "rule_player_fast",
+      "type": "rule",
+      "question": "Swift as thought, quick as lightning. The hero's feet barely touch the ground. What power flows through them?",
+      "answers": [
+        "Player is Fast",
+        "Player is Slow",
+        "Time is Fast",
+        "Ground is Fast"
+      ],
+      "correctAnswer": 0,
+      "ruleEffect": "player_is_fast",
+      "hint": "Speed increases"
     }
   ]
 }
