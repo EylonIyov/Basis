@@ -10,6 +10,9 @@ export class Boot extends Phaser.Scene {
     }
 
     preload() {
+        // Load video assets
+        this.load.video('bg_video_level1', 'assets/background video.mp4', true);
+
         // Display loading text
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;

@@ -72,5 +72,6 @@ const gateData = {
 const loader = new LevelLoader();
 export const Level1 = loader.loadFromMatrix(level1Matrix, gateData, {
     name: "Level 1 - The Beginning",
-    theme: "cave"
+    theme: "cave",
+    backgroundVideo: "bg_video_level1"
 });
