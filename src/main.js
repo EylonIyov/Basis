@@ -10,6 +10,8 @@ const config = {
     height: 720,
     backgroundColor: '#2c3e50',
     pixelArt: true,
+    transparent: false,
+    antialias: false,
     scene: [
         Boot,
         Game
@@ -18,6 +20,12 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
+    render: {
+        pixelArt: true,
+        antialias: false,
+        antialiasGL: false,
+        roundPixels: true
+    }
 }
 
 new Phaser.Game(config);

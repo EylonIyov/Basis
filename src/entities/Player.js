@@ -26,8 +26,24 @@ export class Player {
     createSprite() {
         const pixelPos = this.getPixelPosition();
         
-        // Try to use generated sprite sheet
-        if (this.scene.textures.exists('player')) {
+        // Try to use custom player animations first (idle.png, moving1-5.png)
+        if (this.scene.textures.exists('player_idle')) {
+            this.sprite = this.scene.add.sprite(pixelPos.x, pixelPos.y, 'player_idle');
+            this.sprite.setOrigin(0.5);
+            
+            // Ensure proper rendering for pixel art with transparency
+            this.sprite.setPipeline('MultiPipeline');
+            
+            // Set display size to match tile
+            const size = this.gridPhysics ? this.gridPhysics.tileSize - 4 : 28;
+            this.sprite.setDisplaySize(size, size);
+            
+            // Play idle animation if it exists
+            if (this.scene.anims.exists('player_idle')) {
+                this.sprite.play('player_idle');
+            }
+        } else if (this.scene.textures.exists('player')) {
+            // Fallback to generated sprite sheet
             this.sprite = this.scene.add.sprite(pixelPos.x, pixelPos.y, 'player');
             this.sprite.setOrigin(0.5);
             
@@ -226,8 +242,12 @@ export class Player {
      * Play movement animation
      */
     playMoveAnimation(dirX, dirY) {
-        // For sprite sheet
-        if (this.sprite.anims && this.scene.anims.exists('player_run_right')) {
+        // Try to use custom movement animation first
+        if (this.sprite.anims && this.scene.anims.exists('player_move')) {
+            this.sprite.play('player_move', true);
+            this.sprite.flipX = !this.facingRight;
+        } else if (this.sprite.anims && this.scene.anims.exists('player_run_right')) {
+            // Fallback to generated sprite animation
             this.sprite.play('player_run_right', true);
             this.sprite.flipX = !this.facingRight;
         }

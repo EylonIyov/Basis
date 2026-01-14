@@ -14,6 +14,14 @@ export class Boot extends Phaser.Scene {
         this.load.video('bg_video_level1', 'assets/background video.mp4', true);
         this.load.video('bg_video_level2', 'assets/video level 2.mp4', true);
 
+        // Load player animation assets
+        this.load.image('player_idle', 'assets/idle.png');
+        this.load.image('player_moving1', 'assets/moving1.png');
+        this.load.image('player_moving2', 'assets/moving2.png');
+        this.load.image('player_moving3', 'assets/moving3.png');
+        this.load.image('player_moving4', 'assets/moving4.png');
+        this.load.image('player_moving5', 'assets/moving5.png');
+
         // Display loading text
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -53,6 +61,9 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
+        // Create player animations
+        this.createPlayerAnimations();
+
         // Generate all game assets
         const assetGenerator = new AssetGenerator(this);
         
@@ -83,6 +94,30 @@ export class Boot extends Phaser.Scene {
                     });
                 });
             });
+        });
+    }
+
+    createPlayerAnimations() {
+        // Create idle animation
+        this.anims.create({
+            key: 'player_idle',
+            frames: [{ key: 'player_idle' }],
+            frameRate: 1,
+            repeat: -1
+        });
+
+        // Create movement animation using moving1-5
+        this.anims.create({
+            key: 'player_move',
+            frames: [
+                { key: 'player_moving1' },
+                { key: 'player_moving2' },
+                { key: 'player_moving3' },
+                { key: 'player_moving4' },
+                { key: 'player_moving5' }
+            ],
+            frameRate: 10,
+            repeat: -1
         });
     }
 
