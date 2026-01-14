@@ -122,6 +122,12 @@ export class Game extends Phaser.Scene {
      * Create background layer
      */
     createBackground() {
+        // Check if level has a video background
+        if (this.level.backgroundVideo && this.cache.video.exists(this.level.backgroundVideo)) {
+            this.createVideoBackground(this.level.backgroundVideo);
+            return;
+        }
+
         const bgTexture = this.level.theme === 'forest' ? 'bg_forest' : 'bg_cave';
 
         // Tile the background
@@ -143,6 +149,31 @@ export class Game extends Phaser.Scene {
                 0x1A1A2E
             ).setDepth(0);
         }
+    }
+
+    /**
+     * Create a video background that fills the screen
+     */
+    createVideoBackground(videoKey) {
+        const video = this.add.video(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            videoKey
+        );
+
+        // Scale video to cover the entire screen
+        const scaleX = this.cameras.main.width / video.width;
+        const scaleY = this.cameras.main.height / video.height;
+        const scale = Math.max(scaleX, scaleY);
+        video.setScale(scale);
+
+        video.setDepth(0);
+        video.setLoop(true);
+        video.setMute(true);
+        video.play();
+
+        // Store reference for cleanup
+        this.backgroundVideo = video;
     }
 
     /**
@@ -755,6 +786,13 @@ export class Game extends Phaser.Scene {
      * Clean up when leaving scene
      */
     shutdown() {
+        // Clean up video background
+        if (this.backgroundVideo) {
+            this.backgroundVideo.stop();
+            this.backgroundVideo.destroy();
+            this.backgroundVideo = null;
+        }
+
         // Clean up entities
         if (this.player) this.player.destroy();
         if (this.friend) this.friend.destroy();

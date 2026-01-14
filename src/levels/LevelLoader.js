@@ -32,6 +32,7 @@ export class LevelLoader {
         const level = {
             name: options.name || "Level",
             theme: options.theme || "cave",
+            backgroundVideo: options.backgroundVideo || null, // Video key for background
             gridWidth: this.gridWidth,
             gridHeight: this.gridHeight,
             start: null,
