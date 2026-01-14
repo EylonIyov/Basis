@@ -2,6 +2,7 @@
   "riddles": [
     {
       "id": "riddle_001",
+      "type": "barrier",
       "question": "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
       "answers": [
         "An echo",
@@ -14,6 +15,7 @@
     },
     {
       "id": "riddle_002",
+      "type": "barrier",
       "question": "The more you take, the more you leave behind. What am I?",
       "answers": [
         "Footsteps",
@@ -26,6 +28,7 @@
     },
     {
       "id": "riddle_003",
+      "type": "barrier",
       "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
       "answers": [
         "A map",
@@ -38,6 +41,7 @@
     },
     {
       "id": "riddle_004",
+      "type": "barrier",
       "question": "What has keys but no locks, space but no room, and you can enter but not go inside?",
       "answers": [
         "A keyboard",
@@ -50,6 +54,7 @@
     },
     {
       "id": "riddle_005",
+      "type": "barrier",
       "question": "I'm tall when I'm young, and short when I'm old. What am I?",
       "answers": [
         "A candle",
@@ -62,6 +67,7 @@
     },
     {
       "id": "riddle_006",
+      "type": "barrier",
       "question": "What has a head, a tail, is brown, and has no legs?",
       "answers": [
         "A penny",
@@ -74,6 +80,7 @@
     },
     {
       "id": "riddle_007",
+      "type": "barrier",
       "question": "What gets wetter the more it dries?",
       "answers": [
         "A towel",
@@ -86,6 +93,7 @@
     },
     {
       "id": "riddle_008",
+      "type": "barrier",
       "question": "I'm light as a feather, but the strongest person can't hold me for more than a few minutes. What am I?",
       "answers": [
         "Your breath",
@@ -98,6 +106,7 @@
     },
     {
       "id": "riddle_009",
+      "type": "barrier",
       "question": "What has hands but can't clap?",
       "answers": [
         "A clock",
@@ -110,6 +119,7 @@
     },
     {
       "id": "riddle_010",
+      "type": "barrier",
       "question": "What goes up but never comes down?",
       "answers": [
         "Your age",
@@ -119,6 +129,57 @@
       ],
       "correctAnswer": 0,
       "hint": "It increases every year"
+    },
+    {
+      "id": "riddle_rule_001",
+      "type": "rule",
+      "question": "LOGIC PUZZLE: If WALL is STOP, what happens when WALL becomes AIR?",
+      "answers": [
+        "Walls disappear",
+        "Walls become harder",
+        "Nothing changes",
+        "Player becomes wall"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "WALL_IS_AIR",
+        "value": true,
+        "description": "WALL IS AIR - Walk through walls!"
+      }
+    },
+    {
+      "id": "riddle_rule_002",
+      "type": "rule",
+      "question": "LOGIC PUZZLE: Speed = Distance / Time. If Time decreases, Speed...?",
+      "answers": [
+        "Increases",
+        "Decreases",
+        "Stays same",
+        "Becomes zero"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "PLAYER_IS_FAST",
+        "value": true,
+        "description": "PLAYER IS FAST - Move at lightning speed!"
+      }
+    },
+    {
+      "id": "riddle_rule_003",
+      "type": "rule",
+      "question": "LOGIC PUZZLE: If all GATES are OPEN, what blocks your path?",
+      "answers": [
+        "Nothing (gates are open)",
+        "More gates appear",
+        "Walls become gates",
+        "The floor disappears"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "GATE_IS_OPEN",
+        "value": true,
+        "description": "GATE IS OPEN - All gates unlocked!"
+      }
     }
   ]
 }
