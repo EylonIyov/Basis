@@ -190,11 +190,52 @@ export class GridPhysics {
     }
 
     /**
-     * Check if there's a wall at grid position
+     * Check if there's a wall at grid position (considering wall type rules)
      */
     isWallAt(gridX, gridY) {
         if (!this.walls) return false;
-        return this.walls.some(wall => wall.gridX === gridX && wall.gridY === gridY);
+        
+        const wall = this.walls.find(w => w.gridX === gridX && w.gridY === gridY);
+        if (!wall) return false;
+        
+        // Check if this wall type has been made passable
+        if (this.ruleManager) {
+            const wallType = wall.type || 'brick';
+            
+            // Check type-specific rules
+            switch (wallType) {
+                case 'brick':
+                    if (this.ruleManager.isRuleActive('BRICK_IS_AIR')) return false;
+                    break;
+                case 'wood':
+                    if (this.ruleManager.isRuleActive('WOOD_IS_AIR')) return false;
+                    break;
+                case 'iron':
+                    if (this.ruleManager.isRuleActive('IRON_IS_AIR')) return false;
+                    break;
+                case 'steel':
+                    if (this.ruleManager.isRuleActive('STEEL_IS_AIR')) return false;
+                    break;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get wall at grid position (returns the wall object or null)
+     */
+    getWallAt(gridX, gridY) {
+        if (!this.walls) return null;
+        return this.walls.find(w => w.gridX === gridX && w.gridY === gridY) || null;
+    }
+    
+    /**
+     * Get all walls of a specific type
+     */
+    getWallsByType(wallType) {
+        if (!this.walls) return [];
+        return this.walls.filter(w => (w.type || 'brick') === wallType);
     }
 
     /**

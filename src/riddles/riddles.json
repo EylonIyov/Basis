@@ -131,24 +131,7 @@
       "hint": "It increases every year"
     },
     {
-      "id": "riddle_rule_001",
-      "type": "rule",
-      "question": "LOGIC PUZZLE: If WALL is STOP, what happens when WALL becomes AIR?",
-      "answers": [
-        "Walls disappear",
-        "Walls become harder",
-        "Nothing changes",
-        "Player becomes wall"
-      ],
-      "correctAnswer": 0,
-      "effect": {
-        "ruleId": "WALL_IS_AIR",
-        "value": true,
-        "description": "WALL IS AIR - Walk through walls!"
-      }
-    },
-    {
-      "id": "riddle_rule_002",
+      "id": "riddle_rule_speed",
       "type": "rule",
       "question": "LOGIC PUZZLE: Speed = Distance / Time. If Time decreases, Speed...?",
       "answers": [
@@ -161,11 +144,11 @@
       "effect": {
         "ruleId": "PLAYER_IS_FAST",
         "value": true,
-        "description": "PLAYER IS FAST - Move at lightning speed!"
+        "description": "PLAYER IS FAST - Lightning speed!"
       }
     },
     {
-      "id": "riddle_rule_003",
+      "id": "riddle_rule_gates",
       "type": "rule",
       "question": "LOGIC PUZZLE: If all GATES are OPEN, what blocks your path?",
       "answers": [
@@ -179,6 +162,159 @@
         "ruleId": "GATE_IS_OPEN",
         "value": true,
         "description": "GATE IS OPEN - All gates unlocked!"
+      }
+    },
+    {
+      "id": "riddle_brick_air",
+      "type": "rule",
+      "question": "ELEMENTAL: What force can reduce ancient bricks to dust?",
+      "answers": [
+        "Time and erosion",
+        "More bricks",
+        "Freezing cold",
+        "Total silence"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "BRICK_IS_AIR",
+        "value": true,
+        "description": "BRICK IS AIR - Bricks crumble!"
+      }
+    },
+    {
+      "id": "riddle_wood_air",
+      "type": "rule",
+      "question": "ELEMENTAL: Wood fears me. I consume without hands. I dance without feet. What am I?",
+      "answers": [
+        "Fire",
+        "Water",
+        "Wind",
+        "Earth"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "WOOD_IS_AIR",
+        "value": true,
+        "description": "WOOD IS AIR - Wood burns away!"
+      }
+    },
+    {
+      "id": "riddle_iron_air",
+      "type": "rule",
+      "question": "CHEMISTRY: Iron + Oxygen + Water = ?",
+      "answers": [
+        "Rust (iron crumbles)",
+        "Steel (iron hardens)",
+        "Gold (iron transforms)",
+        "Nothing happens"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "IRON_IS_AIR",
+        "value": true,
+        "description": "IRON IS AIR - Iron rusts away!"
+      }
+    },
+    {
+      "id": "riddle_steel_air",
+      "type": "rule",
+      "question": "PHYSICS: At what temperature does steel begin to lose structural integrity?",
+      "answers": [
+        "Extreme heat (melting point)",
+        "Room temperature",
+        "Absolute zero",
+        "Steel is indestructible"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "STEEL_IS_AIR",
+        "value": true,
+        "description": "STEEL IS AIR - Steel melts away!"
+      }
+    },
+    {
+      "id": "riddle_brick_shuffle",
+      "type": "rule",
+      "question": "CHAOS: When an earthquake strikes a brick building, what happens to the bricks?",
+      "answers": [
+        "They shift and rearrange",
+        "They become stronger",
+        "They turn to sand",
+        "Nothing moves"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "BRICK_SHUFFLE",
+        "value": true,
+        "description": "BRICK SHUFFLE - Bricks rearrange!"
+      }
+    },
+    {
+      "id": "riddle_wood_shuffle",
+      "type": "rule",
+      "question": "NATURE: In a forest, when a mighty wind blows, the wooden barriers...",
+      "answers": [
+        "Shift to new positions",
+        "Stand completely still",
+        "Grow taller",
+        "Turn to stone"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "WOOD_SHUFFLE",
+        "value": true,
+        "description": "WOOD SHUFFLE - Wood relocates!"
+      }
+    },
+    {
+      "id": "riddle_iron_shuffle",
+      "type": "rule",
+      "question": "MAGNETISM: What happens to iron objects when a powerful magnet passes by?",
+      "answers": [
+        "They move and rearrange",
+        "They become invisible",
+        "They turn to rust",
+        "They freeze in place"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "IRON_SHUFFLE",
+        "value": true,
+        "description": "IRON SHUFFLE - Iron bars relocate!"
+      }
+    },
+    {
+      "id": "riddle_steel_shuffle",
+      "type": "rule",
+      "question": "ENGINEERING: In a modular building, steel panels can be...",
+      "answers": [
+        "Repositioned anywhere",
+        "Never moved once placed",
+        "Only removed entirely",
+        "Welded together forever"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "STEEL_SHUFFLE",
+        "value": true,
+        "description": "STEEL SHUFFLE - Steel repositions!"
+      }
+    },
+    {
+      "id": "riddle_ghost",
+      "type": "rule",
+      "question": "METAPHYSICS: A spirit has no physical form. Therefore it can...",
+      "answers": [
+        "Pass through all matter",
+        "Only touch gold",
+        "Move only at night",
+        "See but not move"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "PLAYER_IS_GHOST",
+        "value": true,
+        "description": "PLAYER IS GHOST - Phase through everything!"
       }
     }
   ]

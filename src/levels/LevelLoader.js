@@ -2,14 +2,17 @@
  * LevelLoader - Loads and parses level data from matrix format
  * 
  * Expanded Matrix Format (20x15 grid):
- * 0 = Empty/Floor tile (walkable)
- * 1 = Wall (blocks movement)
- * 2 = Gate (requires riddle to pass)
- * 3 = Player Start position
- * 4 = Friend NPC (Win condition)
- * 5 = Pushable Block
- * 6 = Socket (pressure plate for blocks)
- * 7 = Special Wall (unlocks when socket is filled)
+ * 0  = Empty/Floor tile (walkable)
+ * 1  = Brick Wall (classic, affected by BRICK_IS_AIR)
+ * 2  = Gate (requires riddle to pass)
+ * 3  = Player Start position
+ * 4  = Friend NPC (Win condition)
+ * 5  = Pushable Block
+ * 6  = Socket (pressure plate for blocks)
+ * 7  = Special Wall (unlocks when socket is filled)
+ * 8  = Wood Wall (affected by WOOD_IS_AIR, can shuffle)
+ * 9  = Iron Wall (affected by IRON_IS_AIR)
+ * 10 = Steel Wall (affected by STEEL_IS_AIR)
  */
 export class LevelLoader {
     constructor() {
@@ -58,13 +61,43 @@ export class LevelLoader {
                     case 0: // Empty/Floor - do nothing
                         break;
                     
-                    case 1: // Wall
+                    case 1: // Brick Wall
                         level.walls.push({ 
                             x, 
                             y, 
                             width: 1, 
                             height: 1,
-                            type: 'wall'
+                            type: 'brick'
+                        });
+                        break;
+                    
+                    case 8: // Wood Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'wood'
+                        });
+                        break;
+                    
+                    case 9: // Iron Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'iron'
+                        });
+                        break;
+                    
+                    case 10: // Steel Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'steel'
                         });
                         break;
                     

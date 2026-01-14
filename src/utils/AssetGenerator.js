@@ -278,20 +278,30 @@ export class AssetGenerator {
     }
 
     /**
-     * Generate wall sprite - stone/brick texture
+     * Generate all wall type sprites
      */
     generateWallSprite(size) {
+        this.generateBrickWall(size);
+        this.generateWoodWall(size);
+        this.generateIronWall(size);
+        this.generateSteelWall(size);
+    }
+
+    /**
+     * Generate brick wall sprite - classic red/brown bricks
+     */
+    generateBrickWall(size) {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
 
-        // Base color
-        ctx.fillStyle = '#34495E';
+        // Base color - reddish brown
+        ctx.fillStyle = '#8B4513';
         ctx.fillRect(0, 0, size, size);
 
         // Brick pattern
-        ctx.strokeStyle = '#2C3E50';
+        ctx.strokeStyle = '#5D2E0C';
         ctx.lineWidth = 1;
 
         // Horizontal lines
@@ -313,20 +323,205 @@ export class AssetGenerator {
             }
         }
 
-        // Add some noise/texture
-        for (let i = 0; i < 10; i++) {
+        // Add texture variation
+        for (let i = 0; i < 15; i++) {
             const px = Math.random() * size;
             const py = Math.random() * size;
-            ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.2})`;
-            ctx.fillRect(px, py, 2, 2);
+            ctx.fillStyle = `rgba(139, 69, 19, ${0.3 + Math.random() * 0.4})`;
+            ctx.fillRect(px, py, 3, 3);
         }
 
         // Border
-        ctx.strokeStyle = '#1A252F';
+        ctx.strokeStyle = '#3D1A00';
         ctx.lineWidth = 2;
         ctx.strokeRect(1, 1, size - 2, size - 2);
 
+        this.scene.textures.addCanvas('wall_brick', canvas);
+        // Also add as default 'wall' for backwards compatibility
         this.scene.textures.addCanvas('wall', canvas);
+    }
+
+    /**
+     * Generate wood wall sprite - wooden planks
+     */
+    generateWoodWall(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Base wood color
+        ctx.fillStyle = '#DEB887';
+        ctx.fillRect(0, 0, size, size);
+
+        // Wood grain - horizontal planks
+        ctx.strokeStyle = '#A0522D';
+        ctx.lineWidth = 1;
+
+        // Plank separations
+        for (let y = 0; y < size; y += 10) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(size, y);
+            ctx.stroke();
+        }
+
+        // Wood grain lines
+        ctx.strokeStyle = '#CD853F';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < 8; i++) {
+            const y = 2 + Math.random() * (size - 4);
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.bezierCurveTo(size/3, y + 2, size*2/3, y - 2, size, y);
+            ctx.stroke();
+        }
+
+        // Knots
+        ctx.fillStyle = '#8B4513';
+        for (let i = 0; i < 2; i++) {
+            const kx = 5 + Math.random() * (size - 10);
+            const ky = 5 + Math.random() * (size - 10);
+            ctx.beginPath();
+            ctx.ellipse(kx, ky, 3, 2, Math.random() * Math.PI, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Border
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, size - 2, size - 2);
+
+        this.scene.textures.addCanvas('wall_wood', canvas);
+    }
+
+    /**
+     * Generate iron wall sprite - iron bars/grate
+     */
+    generateIronWall(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Dark background
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fillRect(0, 0, size, size);
+
+        // Iron bars - vertical
+        ctx.fillStyle = '#4A4A5A';
+        const barWidth = 4;
+        const barSpacing = 8;
+        for (let x = barSpacing; x < size - barSpacing/2; x += barSpacing) {
+            // 3D bar effect
+            ctx.fillStyle = '#5A5A6A';
+            ctx.fillRect(x - barWidth/2, 2, barWidth, size - 4);
+            ctx.fillStyle = '#3A3A4A';
+            ctx.fillRect(x - barWidth/2 + 1, 2, 1, size - 4);
+            ctx.fillStyle = '#6A6A7A';
+            ctx.fillRect(x + barWidth/2 - 2, 2, 1, size - 4);
+        }
+
+        // Horizontal bar (cross brace)
+        ctx.fillStyle = '#5A5A6A';
+        ctx.fillRect(2, size/2 - 2, size - 4, 4);
+        ctx.fillStyle = '#6A6A7A';
+        ctx.fillRect(2, size/2 - 2, size - 4, 1);
+
+        // Rust spots
+        ctx.fillStyle = '#8B4513';
+        for (let i = 0; i < 5; i++) {
+            const rx = Math.random() * size;
+            const ry = Math.random() * size;
+            ctx.fillRect(rx, ry, 2, 2);
+        }
+
+        // Border
+        ctx.strokeStyle = '#2A2A3A';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, size - 2, size - 2);
+
+        this.scene.textures.addCanvas('wall_iron', canvas);
+    }
+
+    /**
+     * Generate steel wall sprite - reinforced steel plates
+     */
+    generateSteelWall(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Steel base - blue-gray gradient
+        const gradient = ctx.createLinearGradient(0, 0, size, size);
+        gradient.addColorStop(0, '#4A5568');
+        gradient.addColorStop(0.5, '#718096');
+        gradient.addColorStop(1, '#4A5568');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+
+        // Rivets in corners
+        ctx.fillStyle = '#2D3748';
+        const rivetSize = 4;
+        const rivetOffset = 5;
+        // Top-left
+        ctx.beginPath();
+        ctx.arc(rivetOffset, rivetOffset, rivetSize/2, 0, Math.PI * 2);
+        ctx.fill();
+        // Top-right
+        ctx.beginPath();
+        ctx.arc(size - rivetOffset, rivetOffset, rivetSize/2, 0, Math.PI * 2);
+        ctx.fill();
+        // Bottom-left
+        ctx.beginPath();
+        ctx.arc(rivetOffset, size - rivetOffset, rivetSize/2, 0, Math.PI * 2);
+        ctx.fill();
+        // Bottom-right
+        ctx.beginPath();
+        ctx.arc(size - rivetOffset, size - rivetOffset, rivetSize/2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rivet highlights
+        ctx.fillStyle = '#A0AEC0';
+        ctx.beginPath();
+        ctx.arc(rivetOffset - 1, rivetOffset - 1, 1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(size - rivetOffset - 1, rivetOffset - 1, 1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // X pattern for reinforcement
+        ctx.strokeStyle = '#2D3748';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(8, 8);
+        ctx.lineTo(size - 8, size - 8);
+        ctx.moveTo(size - 8, 8);
+        ctx.lineTo(8, size - 8);
+        ctx.stroke();
+
+        // Center bolt
+        ctx.fillStyle = '#1A202C';
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#A0AEC0';
+        ctx.beginPath();
+        ctx.arc(size/2 - 1, size/2 - 1, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = '#1A202C';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(1, 1, size - 2, size - 2);
+
+        // Inner border highlight
+        ctx.strokeStyle = '#A0AEC0';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(3, 3, size - 6, size - 6);
+
+        this.scene.textures.addCanvas('wall_steel', canvas);
     }
 
     /**

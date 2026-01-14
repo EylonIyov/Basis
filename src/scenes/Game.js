@@ -216,21 +216,35 @@ export class Game extends Phaser.Scene {
 
         if (!this.level.walls) return;
 
+        // Fallback colors for each wall type
+        const fallbackColors = {
+            brick: { fill: 0x8B4513, stroke: 0x5D2E0C },
+            wood: { fill: 0xDEB887, stroke: 0x8B4513 },
+            iron: { fill: 0x4A4A5A, stroke: 0x2A2A3A },
+            steel: { fill: 0x4A5568, stroke: 0x1A202C }
+        };
+
         this.level.walls.forEach(wallData => {
             const pixelPos = this.gridPhysics.gridToPixel(wallData.x, wallData.y);
+            const wallType = wallData.type || 'brick';
+            const textureKey = `wall_${wallType}`;
 
             let sprite;
-            if (this.textures.exists('wall')) {
+            if (this.textures.exists(textureKey)) {
+                sprite = this.add.image(pixelPos.x, pixelPos.y, textureKey);
+                sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+            } else if (this.textures.exists('wall')) {
                 sprite = this.add.image(pixelPos.x, pixelPos.y, 'wall');
                 sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
             } else {
-                // Fallback placeholder
+                // Fallback placeholder with type-specific color
+                const colors = fallbackColors[wallType] || fallbackColors.brick;
                 sprite = this.add.rectangle(
                     pixelPos.x, pixelPos.y,
                     this.tileSize - 4, this.tileSize - 4,
-                    0x34495E
+                    colors.fill
                 );
-                sprite.setStrokeStyle(2, 0x2C3E50);
+                sprite.setStrokeStyle(2, colors.stroke);
             }
 
             sprite.setDepth(3);
@@ -238,6 +252,9 @@ export class Game extends Phaser.Scene {
             const wall = {
                 gridX: wallData.x,
                 gridY: wallData.y,
+                type: wallType,
+                originalX: wallData.x,  // Store original position for shuffle
+                originalY: wallData.y,
                 sprite: sprite
             };
 
@@ -547,6 +564,10 @@ export class Game extends Phaser.Scene {
             console.log(`[Game] Rule applied: ${effect.ruleId}`);
             this.applyRuleVisuals(effect.ruleId);
         };
+
+        this.uiManager.onRestart = () => {
+            this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
+        };
     }
 
     /**
@@ -582,10 +603,28 @@ export class Game extends Phaser.Scene {
      * Apply visual effects when rules change
      */
     applyRuleVisuals(ruleId) {
+        // Handle wall type IS_AIR rules
+        const wallTypeMatch = ruleId.match(/^(BRICK|WOOD|IRON|STEEL)_IS_AIR$/);
+        if (wallTypeMatch) {
+            const wallType = wallTypeMatch[1].toLowerCase();
+            this.applyWallTypeAirEffect(wallType, this.ruleManager.isRuleActive(ruleId));
+            return;
+        }
+
+        // Handle wall type SHUFFLE rules
+        const shuffleMatch = ruleId.match(/^(BRICK|WOOD|IRON|STEEL)_SHUFFLE$/);
+        if (shuffleMatch) {
+            const wallType = shuffleMatch[1].toLowerCase();
+            if (this.ruleManager.isRuleActive(ruleId)) {
+                this.shuffleWallsOfType(wallType);
+            }
+            return;
+        }
+
         switch (ruleId) {
             case 'WALL_IS_AIR':
+                // Affects ALL walls
                 if (this.ruleManager.isRuleActive('WALL_IS_AIR')) {
-                    // Fade out walls
                     this.walls.forEach(wall => {
                         this.tweens.add({
                             targets: wall.sprite,
@@ -594,10 +633,8 @@ export class Game extends Phaser.Scene {
                             ease: 'Power2'
                         });
                     });
-                    // Create particle effect
                     this.createEvaporationEffect();
                 } else {
-                    // Restore walls
                     this.walls.forEach(wall => {
                         this.tweens.add({
                             targets: wall.sprite,
@@ -623,6 +660,219 @@ export class Game extends Phaser.Scene {
                 }
                 break;
         }
+    }
+
+    /**
+     * Apply air effect to a specific wall type
+     */
+    applyWallTypeAirEffect(wallType, isActive) {
+        const wallsOfType = this.walls.filter(w => (w.type || 'brick') === wallType);
+        
+        if (isActive) {
+            // Fade out walls of this type with type-specific particle effect
+            wallsOfType.forEach(wall => {
+                this.createWallDissolveEffect(wall, wallType);
+                this.tweens.add({
+                    targets: wall.sprite,
+                    alpha: 0.15,
+                    duration: 600,
+                    ease: 'Power2'
+                });
+            });
+        } else {
+            // Restore walls
+            wallsOfType.forEach(wall => {
+                this.tweens.add({
+                    targets: wall.sprite,
+                    alpha: 1,
+                    duration: 500,
+                    ease: 'Power2'
+                });
+            });
+        }
+    }
+
+    /**
+     * Create wall dissolve effect based on type
+     */
+    createWallDissolveEffect(wall, wallType) {
+        const pixelPos = { x: wall.sprite.x, y: wall.sprite.y };
+        
+        // Type-specific particle colors
+        const particleColors = {
+            brick: [0x8B4513, 0xA0522D, 0xCD853F],
+            wood: [0xDEB887, 0xD2691E, 0x8B4513],
+            iron: [0x4A4A5A, 0x6A6A7A, 0x8B4513], // With rust
+            steel: [0x4A5568, 0x718096, 0x3498DB]  // Blue sparks
+        };
+
+        const colors = particleColors[wallType] || particleColors.brick;
+
+        for (let i = 0; i < 8; i++) {
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const particle = this.add.circle(
+                pixelPos.x + (Math.random() - 0.5) * this.tileSize,
+                pixelPos.y + (Math.random() - 0.5) * this.tileSize,
+                2 + Math.random() * 3,
+                color,
+                0.9
+            );
+            particle.setDepth(20);
+
+            // Different animations based on type
+            const targetY = wallType === 'wood' 
+                ? pixelPos.y + 30  // Wood falls down
+                : pixelPos.y - 25; // Others float up
+
+            this.tweens.add({
+                targets: particle,
+                x: particle.x + (Math.random() - 0.5) * 40,
+                y: targetY + (Math.random() - 0.5) * 20,
+                alpha: 0,
+                scale: 0,
+                duration: 500 + Math.random() * 300,
+                ease: 'Power2',
+                onComplete: () => particle.destroy()
+            });
+        }
+    }
+
+    /**
+     * Shuffle walls of a specific type to new positions
+     */
+    shuffleWallsOfType(wallType) {
+        const wallsOfType = this.walls.filter(w => (w.type || 'brick') === wallType);
+        
+        if (wallsOfType.length < 2) return;
+
+        // Find empty spaces that could receive walls
+        const emptySpaces = [];
+        for (let x = 0; x < this.gridWidth; x++) {
+            for (let y = 0; y < this.gridHeight; y++) {
+                if (this.isPositionEmpty(x, y)) {
+                    emptySpaces.push({ x, y });
+                }
+            }
+        }
+
+        // Shuffle the empty spaces
+        for (let i = emptySpaces.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [emptySpaces[i], emptySpaces[j]] = [emptySpaces[j], emptySpaces[i]];
+        }
+
+        // Move walls to new positions with animation
+        wallsOfType.forEach((wall, index) => {
+            if (index >= emptySpaces.length) return;
+
+            const newPos = emptySpaces[index];
+            const oldX = wall.gridX;
+            const oldY = wall.gridY;
+
+            // Update grid position
+            wall.gridX = newPos.x;
+            wall.gridY = newPos.y;
+
+            // Get pixel position
+            const targetPixel = this.gridPhysics.gridToPixel(newPos.x, newPos.y);
+
+            // Create trail effect
+            this.createShuffleTrail(wall.sprite.x, wall.sprite.y, targetPixel.x, targetPixel.y, wallType);
+
+            // Animate the wall moving
+            this.tweens.add({
+                targets: wall.sprite,
+                x: targetPixel.x,
+                y: targetPixel.y,
+                duration: 800,
+                ease: 'Back.inOut',
+                delay: index * 100 // Stagger the animations
+            });
+        });
+
+        // Play a whoosh sound effect (visual feedback)
+        console.log(`[Game] Shuffled ${wallsOfType.length} ${wallType} walls!`);
+    }
+
+    /**
+     * Create a trail effect for shuffling walls
+     */
+    createShuffleTrail(fromX, fromY, toX, toY, wallType) {
+        const trailColors = {
+            brick: 0x8B4513,
+            wood: 0xDEB887,
+            iron: 0x4A4A5A,
+            steel: 0x3498DB
+        };
+
+        const color = trailColors[wallType] || 0xFFFFFF;
+        const steps = 5;
+
+        for (let i = 0; i < steps; i++) {
+            const t = i / steps;
+            const x = fromX + (toX - fromX) * t;
+            const y = fromY + (toY - fromY) * t;
+
+            const trail = this.add.circle(x, y, 4, color, 0.6);
+            trail.setDepth(15);
+
+            this.tweens.add({
+                targets: trail,
+                alpha: 0,
+                scale: 0,
+                duration: 600,
+                delay: i * 80,
+                ease: 'Power2',
+                onComplete: () => trail.destroy()
+            });
+        }
+    }
+
+    /**
+     * Check if a grid position is empty (no walls, gates, player, friend, pushables)
+     */
+    isPositionEmpty(gridX, gridY) {
+        // Check bounds
+        if (gridX < 0 || gridX >= this.gridWidth || gridY < 0 || gridY >= this.gridHeight) {
+            return false;
+        }
+
+        // Check walls
+        if (this.walls.some(w => w.gridX === gridX && w.gridY === gridY)) {
+            return false;
+        }
+
+        // Check special walls
+        if (this.specialWalls && this.specialWalls.some(w => w.gridX === gridX && w.gridY === gridY)) {
+            return false;
+        }
+
+        // Check gates
+        if (this.gates.some(g => g.gridX === gridX && g.gridY === gridY)) {
+            return false;
+        }
+
+        // Check player
+        if (this.player && this.player.gridX === gridX && this.player.gridY === gridY) {
+            return false;
+        }
+
+        // Check friend
+        if (this.friend && this.friend.gridX === gridX && this.friend.gridY === gridY) {
+            return false;
+        }
+
+        // Check pushables
+        if (this.pushables.some(p => p.gridX === gridX && p.gridY === gridY)) {
+            return false;
+        }
+
+        // Check sockets
+        if (this.sockets && this.sockets.some(s => s.gridX === gridX && s.gridY === gridY)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
