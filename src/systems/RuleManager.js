@@ -9,9 +9,18 @@ export class RuleManager extends Phaser.Events.EventEmitter {
         
         // Define all possible rules and their default states
         this.rules = {
-            // Movement rules
-            'WALL_IS_AIR': false,      // Walls become passable
-            'WALL_IS_STOP': true,      // Walls block movement (default)
+            // Wall type rules - each type can be made passable
+            'WALL_IS_AIR': false,      // ALL walls become passable (legacy)
+            'BRICK_IS_AIR': false,     // Brick walls become passable
+            'WOOD_IS_AIR': false,      // Wood walls become passable
+            'IRON_IS_AIR': false,      // Iron walls become passable
+            'STEEL_IS_AIR': false,     // Steel walls become passable
+            
+            // Shuffle rules - walls move to alternate positions
+            'BRICK_SHUFFLE': false,    // Brick walls shuffle positions
+            'WOOD_SHUFFLE': false,     // Wood walls shuffle positions
+            'IRON_SHUFFLE': false,     // Iron walls shuffle positions
+            'STEEL_SHUFFLE': false,    // Steel walls shuffle positions
             
             // Speed rules
             'PLAYER_IS_FAST': false,   // Player moves at double speed
@@ -183,8 +192,15 @@ export class RuleManager extends Phaser.Events.EventEmitter {
      */
     getRuleDescription(ruleId) {
         const descriptions = {
-            'WALL_IS_AIR': 'Walls have become transparent! Walk through them.',
-            'WALL_IS_STOP': 'Walls are solid and block movement.',
+            'WALL_IS_AIR': 'All walls have vanished!',
+            'BRICK_IS_AIR': 'Brick walls crumble to dust!',
+            'WOOD_IS_AIR': 'Wood walls rot away!',
+            'IRON_IS_AIR': 'Iron bars rust and break!',
+            'STEEL_IS_AIR': 'Steel plates melt away!',
+            'BRICK_SHUFFLE': 'Bricks rearrange themselves!',
+            'WOOD_SHUFFLE': 'Wood planks shift around!',
+            'IRON_SHUFFLE': 'Iron bars relocate!',
+            'STEEL_SHUFFLE': 'Steel plates reposition!',
             'PLAYER_IS_FAST': 'You move at lightning speed!',
             'PLAYER_IS_SLOW': 'You move in slow motion...',
             'PUSH_IS_DISABLED': 'You can no longer push objects.',
@@ -202,7 +218,14 @@ export class RuleManager extends Phaser.Events.EventEmitter {
     reset() {
         this.rules = {
             'WALL_IS_AIR': false,
-            'WALL_IS_STOP': true,
+            'BRICK_IS_AIR': false,
+            'WOOD_IS_AIR': false,
+            'IRON_IS_AIR': false,
+            'STEEL_IS_AIR': false,
+            'BRICK_SHUFFLE': false,
+            'WOOD_SHUFFLE': false,
+            'IRON_SHUFFLE': false,
+            'STEEL_SHUFFLE': false,
             'PLAYER_IS_FAST': false,
             'PLAYER_IS_SLOW': false,
             'PUSH_IS_DISABLED': false,
