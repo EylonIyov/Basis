@@ -1,15 +1,17 @@
+import { Boot } from './scenes/Boot.js';
 import { Game } from './scenes/Game.js';
 
 const config = {
     type: Phaser.AUTO,
-    title: 'Babi is Hungry',
-    description: '',
+    title: 'Basis',
+    description: 'A puzzle-adventure game about changing the rules.',
     parent: 'game-container',
     width: 1280,
     height: 720,
     backgroundColor: '#2c3e50',
-    pixelArt: false,
+    pixelArt: true,
     scene: [
+        Boot,
         Game
     ],
     scale: {
@@ -19,4 +21,3 @@ const config = {
 }
 
 new Phaser.Game(config);
-            

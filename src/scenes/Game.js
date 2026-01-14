@@ -1,664 +1,570 @@
+/**
+ * Game Scene - Main gameplay scene
+ * Uses modular architecture with separate managers for rules, physics, UI, and levels
+ */
 import { LevelManager } from '../levels/LevelManager.js';
-import { RiddleManager } from '../riddles/RiddleManager.js';
+import { RiddleManager } from '../managers/RiddleManager.js';
+import { UIManager } from '../managers/UIManager.js';
+import { RuleManager } from '../systems/RuleManager.js';
+import { GridPhysics } from '../systems/GridPhysics.js';
+import { Player } from '../entities/Player.js';
+import { Friend } from '../entities/Friend.js';
+import { Pushable } from '../entities/Pushable.js';
 
 export class Game extends Phaser.Scene {
-
     constructor() {
         super('Game');
-        // Initialize level manager early (before init/preload)
         this.levelManager = new LevelManager();
     }
 
     init(data) {
-        // Allow level to be passed in via scene data
-        // If no level specified, use current level from manager
+        // Set level from passed data or use default
         if (data && data.levelIndex !== undefined) {
-            const success = this.levelManager.setLevel(data.levelIndex);
-            if (!success) {
-                console.error(`Failed to set level index ${data.levelIndex}`);
-            } else {
-                console.log(`Setting level to index ${data.levelIndex}: ${this.levelManager.getCurrentLevel().name}`);
-            }
-        } else {
-            console.log(`Starting with default level: ${this.levelManager.getCurrentLevel().name}`);
+            this.levelManager.setLevel(data.levelIndex);
         }
+        console.log(`[Game] Starting level: ${this.levelManager.getCurrentLevel().name}`);
     }
 
     async preload() {
-        // Initialize riddle manager and load riddles
+        // Initialize managers
         this.riddleManager = new RiddleManager();
-        // Load riddles - path is relative to index.html
         await this.riddleManager.loadRiddles('src/riddles/riddles.json');
     }
 
     create() {
-        // Load level data from level manager
+        // Fade in from Boot scene
+        this.cameras.main.fadeIn(300, 0, 0, 0);
+
+        // Load level data
         this.level = this.levelManager.getCurrentLevel();
-        
         if (!this.level) {
-            console.error('No level loaded!');
-            console.error(`Current level index: ${this.levelManager.currentLevelIndex}`);
-            console.error(`Total levels: ${this.levelManager.getLevelCount()}`);
-            console.error(`Levels array:`, this.levelManager.levels);
+            console.error('[Game] No level loaded!');
             return;
         }
-        
-        // Grid configuration from level
+
+        // Grid configuration
         this.gridWidth = this.level.gridWidth;
         this.gridHeight = this.level.gridHeight;
-        
-        console.log(`Loading level: ${this.level.name} (index ${this.levelManager.currentLevelIndex})`);
-        console.log(`Start: (${this.level.start.x}, ${this.level.start.y}), Goal: (${this.level.goal.x}, ${this.level.goal.y})`);
-        console.log(`Gates: ${this.level.gates.length}, Walls: ${this.level.walls.length}`);
-        
-        // Calculate tile size to fit the screen with padding
-        // Leave some padding (20px on each side) to ensure nothing is cut off
-        const padding = 40; // 20px top + 20px bottom
+        this.calculateGridDimensions();
+
+        // Initialize core systems
+        this.initializeSystems();
+
+        // Create game world
+        this.createBackground();
+        this.createGridOverlay();
+        this.createWalls();
+        this.createGates();
+        this.createPushables();
+        this.createFriend();
+        this.createPlayer();
+
+        // Register entities with physics
+        this.registerEntitiesWithPhysics();
+
+        // Initialize UI
+        this.initializeUI();
+
+        // Setup input
+        this.setupInput();
+
+        // Listen for rule changes
+        this.setupRuleListeners();
+
+        console.log(`[Game] Level loaded: ${this.level.name}`);
+    }
+
+    /**
+     * Calculate grid dimensions and offsets
+     */
+    calculateGridDimensions() {
+        const padding = 40;
         const availableHeight = this.cameras.main.height - padding;
         const availableWidth = this.cameras.main.width - padding;
-        
-        // Calculate tile size based on both dimensions, use the smaller one to ensure everything fits
+
         const tileSizeByHeight = Math.floor(availableHeight / this.gridHeight);
         const tileSizeByWidth = Math.floor(availableWidth / this.gridWidth);
         this.tileSize = Math.min(tileSizeByHeight, tileSizeByWidth);
-        
-        // Calculate offset to center the grid with padding
+
         const gridPixelWidth = this.gridWidth * this.tileSize;
         const gridPixelHeight = this.gridHeight * this.tileSize;
         this.gridOffsetX = (this.cameras.main.width - gridPixelWidth) / 2;
         this.gridOffsetY = (this.cameras.main.height - gridPixelHeight) / 2;
-
-        // Game state
-        this.isMoving = false;
-        this.currentRiddleGate = null;
-        this.currentRiddle = null;
-
-        // Create visual grid (optional, for debugging)
-        this.createGrid();
-
-        // Create walls/obstacles
-        this.createWalls();
-
-        // Create Babi character at level start position
-        this.createBabi();
-
-        // Create gates from level data
-        this.createGates();
-
-        // Create food goal at level goal position
-        this.createFood();
-
-        // Create path indicators (visual guides)
-        this.createPathIndicators();
-
-        // Create riddle UI (initially hidden)
-        this.createRiddleUI();
-
-        // Set up input
-        this.setupInput();
     }
 
-    createGrid() {
-        // Optional: Draw grid lines for debugging
-        const graphics = this.add.graphics();
-        graphics.lineStyle(1, 0x34495e, 0.3);
+    /**
+     * Initialize core game systems
+     */
+    initializeSystems() {
+        // Rule Manager
+        this.ruleManager = new RuleManager();
 
+        // Grid Physics
+        this.gridPhysics = new GridPhysics(this, this.ruleManager);
+        this.gridPhysics.configure(
+            this.gridWidth,
+            this.gridHeight,
+            this.tileSize,
+            this.gridOffsetX,
+            this.gridOffsetY
+        );
+    }
+
+    /**
+     * Create background layer
+     */
+    createBackground() {
+        const bgTexture = this.level.theme === 'forest' ? 'bg_forest' : 'bg_cave';
+
+        // Tile the background
+        if (this.textures.exists(bgTexture)) {
+            const bgTileSize = 64;
+            for (let y = 0; y < this.cameras.main.height; y += bgTileSize) {
+                for (let x = 0; x < this.cameras.main.width; x += bgTileSize) {
+                    const tile = this.add.image(x + bgTileSize / 2, y + bgTileSize / 2, bgTexture);
+                    tile.setDepth(0);
+                }
+            }
+        } else {
+            // Fallback solid background
+            this.add.rectangle(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                this.cameras.main.width,
+                this.cameras.main.height,
+                0x1A1A2E
+            ).setDepth(0);
+        }
+    }
+
+    /**
+     * Create semi-transparent grid overlay
+     */
+    createGridOverlay() {
+        const graphics = this.add.graphics();
+        graphics.lineStyle(1, 0xFFFFFF, 0.1);
+        graphics.setDepth(1);
+
+        // Vertical lines
         for (let x = 0; x <= this.gridWidth; x++) {
             graphics.moveTo(this.gridOffsetX + x * this.tileSize, this.gridOffsetY);
             graphics.lineTo(this.gridOffsetX + x * this.tileSize, this.gridOffsetY + this.gridHeight * this.tileSize);
         }
 
+        // Horizontal lines
         for (let y = 0; y <= this.gridHeight; y++) {
             graphics.moveTo(this.gridOffsetX, this.gridOffsetY + y * this.tileSize);
             graphics.lineTo(this.gridOffsetX + this.gridWidth * this.tileSize, this.gridOffsetY + y * this.tileSize);
         }
 
         graphics.strokePath();
+
+        // Grid border
+        graphics.lineStyle(2, 0xF1C40F, 0.5);
+        graphics.strokeRect(
+            this.gridOffsetX,
+            this.gridOffsetY,
+            this.gridWidth * this.tileSize,
+            this.gridHeight * this.tileSize
+        );
     }
 
+    /**
+     * Create wall entities
+     */
     createWalls() {
-        // Initialize walls array
         this.walls = [];
-        
-        // Create walls/obstacles from level data
-        if (this.level.walls) {
-            this.level.walls.forEach(wall => {
-                // Create wall rectangles
-                for (let wx = 0; wx < wall.width; wx++) {
-                    for (let wy = 0; wy < wall.height; wy++) {
-                        const wallX = wall.x + wx;
-                        const wallY = wall.y + wy;
-                        
-                        if (wallX >= 0 && wallX < this.gridWidth && wallY >= 0 && wallY < this.gridHeight) {
-                            const x = this.gridOffsetX + wallX * this.tileSize + this.tileSize / 2;
-                            const y = this.gridOffsetY + wallY * this.tileSize + this.tileSize / 2;
-                            
-                            const wallRect = this.add.rectangle(x, y, this.tileSize - 4, this.tileSize - 4, 0x34495e);
-                            wallRect.setStrokeStyle(2, 0x2c3e50);
-                            wallRect.setDepth(3);
-                            wallRect.gridX = wallX;
-                            wallRect.gridY = wallY;
-                            
-                            this.walls.push(wallRect);
-                        }
-                    }
-                }
-            });
-        }
+
+        if (!this.level.walls) return;
+
+        this.level.walls.forEach(wallData => {
+            const pixelPos = this.gridPhysics.gridToPixel(wallData.x, wallData.y);
+
+            let sprite;
+            if (this.textures.exists('wall')) {
+                sprite = this.add.image(pixelPos.x, pixelPos.y, 'wall');
+                sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+            } else {
+                // Fallback placeholder
+                sprite = this.add.rectangle(
+                    pixelPos.x, pixelPos.y,
+                    this.tileSize - 4, this.tileSize - 4,
+                    0x34495E
+                );
+                sprite.setStrokeStyle(2, 0x2C3E50);
+            }
+
+            sprite.setDepth(3);
+
+            const wall = {
+                gridX: wallData.x,
+                gridY: wallData.y,
+                sprite: sprite
+            };
+
+            this.walls.push(wall);
+        });
     }
 
-    createBabi() {
-        // Starting position from level data
-        this.babiGridX = this.level.start.x;
-        this.babiGridY = this.level.start.y;
-
-        // Create placeholder sprite (pink circle)
-        const x = this.gridOffsetX + this.babiGridX * this.tileSize + this.tileSize / 2;
-        const y = this.gridOffsetY + this.babiGridY * this.tileSize + this.tileSize / 2;
-
-        this.babi = this.add.circle(x, y, this.tileSize / 2 - 4, 0xff69b4);
-        this.babi.setStrokeStyle(3, 0xff1493);
-        this.babi.setDepth(10);
-
-        // Add label
-        this.babiLabel = this.add.text(x, y, 'BABI', {
-            fontSize: '12px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(11);
-    }
-
+    /**
+     * Create gate entities
+     */
     createGates() {
         this.gates = [];
 
-        // Create gates from level data
-        this.level.gates.forEach(gateData => {
-            const x = this.gridOffsetX + gateData.x * this.tileSize + this.tileSize / 2;
-            const y = this.gridOffsetY + gateData.y * this.tileSize + this.tileSize / 2;
+        if (!this.level.gates) return;
 
-            // Different colors for different paths
-            let gateColor = 0xff6b6b; // Default red
-            let strokeColor = 0xff4757;
-            
-            if (gateData.path === 'top') {
-                gateColor = 0xff6b6b; // Red for top path
-                strokeColor = 0xff4757;
-            } else if (gateData.path === 'middle') {
-                gateColor = 0xffa500; // Orange for middle path
-                strokeColor = 0xff8c00;
-            } else if (gateData.path === 'bottom') {
-                gateColor = 0x9b59b6; // Purple for bottom path
-                strokeColor = 0x8e44ad;
+        this.level.gates.forEach(gateData => {
+            const pixelPos = this.gridPhysics.gridToPixel(gateData.x, gateData.y);
+
+            let sprite;
+            if (this.textures.exists('gate_closed')) {
+                sprite = this.add.image(pixelPos.x, pixelPos.y, 'gate_closed');
+                sprite.setDisplaySize(this.tileSize - 4, this.tileSize - 4);
+            } else {
+                // Fallback placeholder
+                const color = gateData.type === 'rule' ? 0x9B59B6 : 0xE74C3C;
+                sprite = this.add.rectangle(
+                    pixelPos.x, pixelPos.y,
+                    this.tileSize - 8, this.tileSize - 8,
+                    color
+                );
+                sprite.setStrokeStyle(3, gateData.type === 'rule' ? 0x8E44AD : 0xC0392B);
             }
 
-            const gate = this.add.rectangle(x, y, this.tileSize - 8, this.tileSize - 8, gateColor);
-            gate.setStrokeStyle(3, strokeColor);
-            gate.setDepth(5);
-            gate.gridX = gateData.x;
-            gate.gridY = gateData.y;
-            gate.isOpen = false;
-            gate.id = gateData.id;
-            gate.path = gateData.path;
-            gate.riddleId = gateData.riddleId;
+            sprite.setDepth(5);
 
-            // Add label with gate ID
-            const label = this.add.text(x, y, gateData.id.toUpperCase().replace('GATE', ''), {
-                fontSize: '10px',
-                color: '#ffffff',
-                fontStyle: 'bold'
+            // Add label
+            const labelText = gateData.type === 'rule' ? '⚡' : '?';
+            const label = this.add.text(pixelPos.x, pixelPos.y, labelText, {
+                fontSize: '16px',
+                fontFamily: 'monospace',
+                color: '#FFFFFF'
             }).setOrigin(0.5).setDepth(6);
 
-            gate.label = label;
+            const gate = {
+                gridX: gateData.x,
+                gridY: gateData.y,
+                id: gateData.id,
+                path: gateData.path,
+                type: gateData.type || 'barrier',
+                ruleEffect: gateData.ruleEffect,
+                isOpen: false,
+                sprite: sprite,
+                label: label
+            };
+
             this.gates.push(gate);
         });
     }
 
-    createFood() {
-        // Food position from level data
-        this.foodGridX = this.level.goal.x;
-        this.foodGridY = this.level.goal.y;
+    /**
+     * Create pushable block entities
+     */
+    createPushables() {
+        this.pushables = [];
 
-        const x = this.gridOffsetX + this.foodGridX * this.tileSize + this.tileSize / 2;
-        const y = this.gridOffsetY + this.foodGridY * this.tileSize + this.tileSize / 2;
+        if (!this.level.pushables) return;
 
-        this.food = this.add.circle(x, y, this.tileSize / 2 - 4, 0x2ecc71);
-        this.food.setStrokeStyle(3, 0x27ae60);
-        this.food.setDepth(5);
-
-        // Add label
-        this.add.text(x, y, 'FOOD', {
-            fontSize: '12px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(6);
+        this.level.pushables.forEach(pushData => {
+            const pushable = new Pushable(this, pushData.x, pushData.y, this.gridPhysics);
+            this.pushables.push(pushable);
+        });
     }
 
-    createPathIndicators() {
-        // Add visual indicators showing different paths
-        // Top path indicator
-        const topGates = this.gates.filter(g => g.path === 'top');
-        if (topGates.length > 0) {
-            const topGate = topGates[0];
-            this.add.text(
-                topGate.x - 60,
-                topGate.y - 30,
-                'TOP PATH',
-                {
-                    fontSize: '10px',
-                    color: '#ff6b6b',
-                    fontStyle: 'bold'
-                }
-            ).setDepth(7);
-        }
+    /**
+     * Create the Friend NPC (win condition)
+     */
+    createFriend() {
+        if (!this.level.friend) return;
 
-        // Middle path indicator
-        const middleGates = this.gates.filter(g => g.path === 'middle');
-        if (middleGates.length > 0) {
-            const middleGate = middleGates[0];
-            this.add.text(
-                middleGate.x - 60,
-                middleGate.y - 30,
-                'MIDDLE PATH',
-                {
-                    fontSize: '10px',
-                    color: '#ffa500',
-                    fontStyle: 'bold'
-                }
-            ).setDepth(7);
-        }
-
-        // Bottom path indicator
-        const bottomGates = this.gates.filter(g => g.path === 'bottom');
-        if (bottomGates.length > 0) {
-            const bottomGate = bottomGates[0];
-            this.add.text(
-                bottomGate.x - 60,
-                bottomGate.y - 30,
-                'BOTTOM PATH',
-                {
-                    fontSize: '10px',
-                    color: '#9b59b6',
-                    fontStyle: 'bold'
-                }
-            ).setDepth(7);
-        }
-    }
-
-    createRiddleUI() {
-        // Create modal background (initially hidden)
-        this.riddleModal = this.add.container(0, 0);
-        this.riddleModal.setVisible(false);
-        this.riddleModal.setDepth(100);
-
-        // Dark overlay
-        const overlay = this.add.rectangle(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            this.cameras.main.width,
-            this.cameras.main.height,
-            0x000000,
-            0.7
+        this.friend = new Friend(
+            this,
+            this.level.friend.x,
+            this.level.friend.y,
+            this.gridPhysics
         );
-        this.riddleModal.add(overlay);
-
-        // Modal box - make it taller to accommodate more answers
-        const modalWidth = 500;
-        const modalHeight = 400;
-        const modalX = this.cameras.main.width / 2;
-        const modalY = this.cameras.main.height / 2;
-
-        const modalBg = this.add.rectangle(modalX, modalY, modalWidth, modalHeight, 0x34495e);
-        modalBg.setStrokeStyle(3, 0x2c3e50);
-        this.riddleModal.add(modalBg);
-
-        // Title
-        const title = this.add.text(modalX, modalY - 150, 'RIDDLE', {
-            fontSize: '24px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.riddleModal.add(title);
-
-        // Riddle text (will be updated when showing riddle)
-        this.riddleText = this.add.text(modalX, modalY - 60, '', {
-            fontSize: '18px',
-            color: '#ecf0f1',
-            align: 'center',
-            wordWrap: { width: modalWidth - 40 }
-        }).setOrigin(0.5);
-        this.riddleModal.add(this.riddleText);
-
-        // Answer buttons container (will be created dynamically)
-        this.answerButtons = [];
-        this.answerButtonTexts = [];
-
-        // Feedback text (for correct/incorrect answers)
-        this.feedbackText = this.add.text(modalX, modalY + 160, '', {
-            fontSize: '16px',
-            color: '#2ecc71',
-            align: 'center',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.riddleModal.add(this.feedbackText);
-        this.feedbackText.setVisible(false);
     }
 
+    /**
+     * Create the player entity
+     */
+    createPlayer() {
+        this.player = new Player(
+            this,
+            this.level.start.x,
+            this.level.start.y
+        );
+        this.player.setGridPhysics(this.gridPhysics);
+    }
+
+    /**
+     * Register all entities with physics system
+     */
+    registerEntitiesWithPhysics() {
+        this.gridPhysics.registerWalls(this.walls);
+        this.gridPhysics.registerGates(this.gates);
+        this.gridPhysics.registerPushables(this.pushables);
+        if (this.friend) {
+            this.gridPhysics.registerFriend(this.friend);
+        }
+    }
+
+    /**
+     * Initialize UI components
+     */
+    initializeUI() {
+        this.uiManager = new UIManager(this, this.riddleManager, this.ruleManager);
+        this.uiManager.updateLevelInfo(this.level.name);
+
+        // Set callbacks
+        this.uiManager.onGateOpened = (gate) => {
+            console.log(`[Game] Gate ${gate.id} opened`);
+        };
+
+        this.uiManager.onRuleApplied = (effect) => {
+            console.log(`[Game] Rule applied: ${effect.ruleId}`);
+            this.applyRuleVisuals(effect.ruleId);
+        };
+    }
+
+    /**
+     * Setup input handling
+     */
     setupInput() {
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        // WASD support
+        this.wasd = {
+            up: this.input.keyboard.addKey('W'),
+            down: this.input.keyboard.addKey('S'),
+            left: this.input.keyboard.addKey('A'),
+            right: this.input.keyboard.addKey('D')
+        };
+
+        // Track last input time to prevent rapid movement
+        this.lastInputTime = 0;
+        this.inputDelay = 150; // ms between inputs
     }
 
-    update() {
-        // Only process movement if not currently moving and no riddle modal is open
-        if (!this.isMoving && !this.riddleModal.visible) {
-            let newX = this.babiGridX;
-            let newY = this.babiGridY;
+    /**
+     * Setup listeners for rule changes
+     */
+    setupRuleListeners() {
+        this.ruleManager.on('ruleChanged', (data) => {
+            this.uiManager.updateActiveRules();
+            this.applyRuleVisuals(data.ruleId);
+        });
+    }
 
-            if (this.cursors.left.isDown) {
-                newX = Math.max(0, this.babiGridX - 1);
-            } else if (this.cursors.right.isDown) {
-                newX = Math.min(this.gridWidth - 1, this.babiGridX + 1);
-            } else if (this.cursors.up.isDown) {
-                newY = Math.max(0, this.babiGridY - 1);
-            } else if (this.cursors.down.isDown) {
-                newY = Math.min(this.gridHeight - 1, this.babiGridY + 1);
-            }
-
-            // Check if position changed
-            if (newX !== this.babiGridX || newY !== this.babiGridY) {
-                // Check for wall collision
-                if (this.isWallAt(newX, newY)) {
-                    // Can't move through walls
-                    return;
-                }
-                
-                // Check for gate collision
-                const gate = this.getGateAt(newX, newY);
-                if (gate && !gate.isOpen) {
-                    // Show riddle modal
-                    this.showRiddleModal(gate);
+    /**
+     * Apply visual effects when rules change
+     */
+    applyRuleVisuals(ruleId) {
+        switch (ruleId) {
+            case 'WALL_IS_AIR':
+                if (this.ruleManager.isRuleActive('WALL_IS_AIR')) {
+                    // Fade out walls
+                    this.walls.forEach(wall => {
+                        this.tweens.add({
+                            targets: wall.sprite,
+                            alpha: 0.2,
+                            duration: 500,
+                            ease: 'Power2'
+                        });
+                    });
+                    // Create particle effect
+                    this.createEvaporationEffect();
                 } else {
-                    // Move to new position
-                    this.moveBabi(newX, newY);
+                    // Restore walls
+                    this.walls.forEach(wall => {
+                        this.tweens.add({
+                            targets: wall.sprite,
+                            alpha: 1,
+                            duration: 500,
+                            ease: 'Power2'
+                        });
+                    });
                 }
+                break;
+
+            case 'GATE_IS_OPEN':
+                if (this.ruleManager.isRuleActive('GATE_IS_OPEN')) {
+                    this.gates.forEach(gate => {
+                        gate.isOpen = true;
+                        this.tweens.add({
+                            targets: [gate.sprite, gate.label],
+                            alpha: 0.3,
+                            duration: 500,
+                            ease: 'Power2'
+                        });
+                    });
+                }
+                break;
+        }
+    }
+
+    /**
+     * Create particle evaporation effect for walls
+     */
+    createEvaporationEffect() {
+        this.walls.forEach(wall => {
+            const pixelPos = { x: wall.sprite.x, y: wall.sprite.y };
+            
+            for (let i = 0; i < 5; i++) {
+                const particle = this.add.circle(
+                    pixelPos.x + (Math.random() - 0.5) * this.tileSize,
+                    pixelPos.y + (Math.random() - 0.5) * this.tileSize,
+                    3,
+                    0x3498DB,
+                    0.8
+                );
+                particle.setDepth(20);
+
+                this.tweens.add({
+                    targets: particle,
+                    y: particle.y - 30,
+                    alpha: 0,
+                    scale: 0,
+                    duration: 800 + Math.random() * 400,
+                    ease: 'Power2',
+                    onComplete: () => particle.destroy()
+                });
             }
+        });
+    }
+
+    /**
+     * Handle gate collision - show riddle
+     */
+    handleGateCollision(gate) {
+        if (!gate || gate.isOpen) return;
+
+        // Get appropriate riddle based on gate type
+        let riddle;
+        if (gate.type === 'rule' && gate.ruleEffect) {
+            // Use a rule riddle and attach the gate's effect
+            riddle = this.riddleManager.getRuleRiddle();
+            if (riddle) {
+                riddle = { ...riddle, effect: gate.ruleEffect };
+            }
+        } else {
+            riddle = this.riddleManager.getBarrierRiddle();
         }
 
-        // Check win condition
-        if (this.babiGridX === this.foodGridX && this.babiGridY === this.foodGridY) {
+        if (riddle) {
+            this.uiManager.currentRiddle = riddle;
+        }
+
+        this.uiManager.showRiddle(gate);
+    }
+
+    /**
+     * Main update loop
+     */
+    update(time) {
+        // Don't process input if UI is open
+        if (this.uiManager && this.uiManager.isOpen()) {
+            return;
+        }
+
+        // Don't process if player is moving
+        if (this.player && this.player.isMoving) {
+            return;
+        }
+
+        // Rate limit input
+        if (time - this.lastInputTime < this.inputDelay) {
+            return;
+        }
+
+        // Get movement direction
+        const direction = this.getInputDirection();
+
+        if (direction.x !== 0 || direction.y !== 0) {
+            this.lastInputTime = time;
+            const result = this.player.tryMove(direction);
+
+            // Check for win condition after move
+            if (result) {
+                this.checkWinCondition();
+            }
+        }
+    }
+
+    /**
+     * Get movement direction from input
+     */
+    getInputDirection() {
+        const direction = { x: 0, y: 0 };
+
+        if (this.cursors.left.isDown || this.wasd.left.isDown) {
+            direction.x = -1;
+        } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
+            direction.x = 1;
+        } else if (this.cursors.up.isDown || this.wasd.up.isDown) {
+            direction.y = -1;
+        } else if (this.cursors.down.isDown || this.wasd.down.isDown) {
+            direction.y = 1;
+        }
+
+        return direction;
+    }
+
+    /**
+     * Check if player has reached the friend (win condition)
+     */
+    checkWinCondition() {
+        if (!this.friend) return;
+
+        const playerPos = this.player.getGridPosition();
+        const friendPos = this.friend.getGridPosition();
+
+        if (playerPos.x === friendPos.x && playerPos.y === friendPos.y) {
             this.handleWin();
         }
     }
 
-    isWallAt(gridX, gridY) {
-        if (!this.walls) return false;
-        return this.walls.some(wall => wall.gridX === gridX && wall.gridY === gridY);
-    }
-
-    getGateAt(gridX, gridY) {
-        return this.gates.find(gate => gate.gridX === gridX && gate.gridY === gridY && !gate.isOpen);
-    }
-
-    moveBabi(newGridX, newGridY) {
-        this.isMoving = true;
-
-        const targetX = this.gridOffsetX + newGridX * this.tileSize + this.tileSize / 2;
-        const targetY = this.gridOffsetY + newGridY * this.tileSize + this.tileSize / 2;
-
-        this.tweens.add({
-            targets: this.babi,
-            x: targetX,
-            y: targetY,
-            duration: 200,
-            ease: 'Power2',
-            onComplete: () => {
-                this.babiGridX = newGridX;
-                this.babiGridY = newGridY;
-                this.isMoving = false;
-            }
-        });
-
-        // Move label with Babi
-        this.tweens.add({
-            targets: this.babiLabel,
-            x: targetX,
-            y: targetY,
-            duration: 200,
-            ease: 'Power2'
-        });
-    }
-
-    showRiddleModal(gate) {
-        this.currentRiddleGate = gate;
-        
-        // Get a random riddle
-        const riddle = this.riddleManager.getRandomRiddle();
-        
-        if (!riddle) {
-            console.error('No riddle available');
-            // Fallback to placeholder
-            const pathName = gate.path.charAt(0).toUpperCase() + gate.path.slice(1);
-            this.riddleText.setText(`Gate ${gate.id.toUpperCase()}\n${pathName} Path\n\n[No riddle available]`);
-            this.riddleModal.setVisible(true);
-            return;
-        }
-
-        this.currentRiddle = riddle;
-        
-        // Update riddle text
-        const pathName = gate.path.charAt(0).toUpperCase() + gate.path.slice(1);
-        this.riddleText.setText(`${pathName} Path\n\n${riddle.question}`);
-        
-        // Clear previous answer buttons
-        this.clearAnswerButtons();
-        
-        // Create answer buttons dynamically
-        this.createAnswerButtons(riddle);
-        
-        // Hide feedback
-        this.feedbackText.setVisible(false);
-        
-        this.riddleModal.setVisible(true);
-    }
-
-    clearAnswerButtons() {
-        // Remove existing answer buttons
-        this.answerButtons.forEach(button => {
-            if (button.rect) button.rect.destroy();
-            if (button.text) button.text.destroy();
-        });
-        this.answerButtons = [];
-        this.answerButtonTexts = [];
-    }
-
-    createAnswerButtons(riddle) {
-        const modalX = this.cameras.main.width / 2;
-        const modalY = this.cameras.main.height / 2;
-        const buttonWidth = 200;
-        const buttonHeight = 45;
-        const buttonSpacing = 55;
-        const startY = modalY + 40;
-        
-        // Shuffle answers for variety (but keep track of correct index)
-        const shuffledAnswers = [...riddle.answers];
-        const correctAnswer = riddle.answers[riddle.correctAnswer];
-        
-        // Simple shuffle
-        for (let i = shuffledAnswers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledAnswers[i], shuffledAnswers[j]] = [shuffledAnswers[j], shuffledAnswers[i]];
-        }
-        
-        // Find the new index of the correct answer
-        const newCorrectIndex = shuffledAnswers.indexOf(correctAnswer);
-        
-        // Store the mapping
-        this.answerMapping = shuffledAnswers.map((answer, index) => ({
-            answer: answer,
-            originalIndex: riddle.answers.indexOf(answer),
-            isCorrect: index === newCorrectIndex
-        }));
-
-        // Create buttons (limit to 4 answers, arranged in 2x2 grid)
-        const maxAnswers = Math.min(shuffledAnswers.length, 4);
-        const buttonsPerRow = 2;
-        
-        shuffledAnswers.slice(0, maxAnswers).forEach((answer, index) => {
-            const row = Math.floor(index / buttonsPerRow);
-            const col = index % buttonsPerRow;
-            
-            const buttonX = modalX + (col - 0.5) * (buttonWidth + 20);
-            const buttonY = startY + row * buttonSpacing;
-            
-            // Create button rectangle
-            const buttonRect = this.add.rectangle(buttonX, buttonY, buttonWidth, buttonHeight, 0x3498db);
-            buttonRect.setStrokeStyle(2, 0x2980b9);
-            buttonRect.setInteractive({ useHandCursor: true });
-            this.riddleModal.add(buttonRect);
-            
-            // Create button text
-            const buttonText = this.add.text(buttonX, buttonY, answer, {
-                fontSize: '14px',
-                color: '#ffffff',
-                align: 'center',
-                wordWrap: { width: buttonWidth - 20 }
-            }).setOrigin(0.5);
-            this.riddleModal.add(buttonText);
-            
-            // Store button info
-            const buttonInfo = {
-                rect: buttonRect,
-                text: buttonText,
-                answerIndex: index,
-                isCorrect: this.answerMapping[index].isCorrect
-            };
-            
-            this.answerButtons.push(buttonInfo);
-            
-            // Add click handler
-            buttonRect.on('pointerdown', () => {
-                this.handleAnswerClick(buttonInfo);
-            });
-        });
-    }
-
-    handleAnswerClick(buttonInfo) {
-        // Disable all buttons
-        this.answerButtons.forEach(btn => {
-            btn.rect.setInteractive(false);
-            btn.rect.setAlpha(0.5);
-        });
-        
-        if (buttonInfo.isCorrect) {
-            // Correct answer
-            buttonInfo.rect.setFillStyle(0x2ecc71);
-            buttonInfo.rect.setStrokeStyle(2, 0x27ae60);
-            this.feedbackText.setText('Correct! Gate opens...');
-            this.feedbackText.setColor('#2ecc71');
-            this.feedbackText.setVisible(true);
-            
-            // Close modal and open gate after a short delay
-            this.time.delayedCall(1000, () => {
-                this.closeRiddleModal(true);
-            });
-        } else {
-            // Wrong answer
-            buttonInfo.rect.setFillStyle(0xe74c3c);
-            buttonInfo.rect.setStrokeStyle(2, 0xc0392b);
-            this.feedbackText.setText('Wrong answer! Try again.');
-            this.feedbackText.setColor('#e74c3c');
-            this.feedbackText.setVisible(true);
-            
-            // Re-enable buttons after a short delay
-            this.time.delayedCall(1500, () => {
-                this.answerButtons.forEach(btn => {
-                    btn.rect.setInteractive({ useHandCursor: true });
-                    btn.rect.setAlpha(1);
-                    // Reset colors
-                    if (!btn.isCorrect) {
-                        btn.rect.setFillStyle(0x3498db);
-                        btn.rect.setStrokeStyle(2, 0x2980b9);
-                    }
-                });
-                this.feedbackText.setVisible(false);
-            });
-        }
-    }
-
-    closeRiddleModal(answeredCorrectly = false) {
-        this.riddleModal.setVisible(false);
-        
-        // Only open gate if answer was correct
-        if (answeredCorrectly && this.currentRiddleGate) {
-            this.currentRiddleGate.isOpen = true;
-            this.currentRiddleGate.setAlpha(0.3);
-            this.currentRiddleGate.label.setAlpha(0.3);
-            this.currentRiddleGate = null;
-        }
-        
-        // Clear current riddle
-        this.currentRiddle = null;
-        this.answerMapping = null;
-    }
-
+    /**
+     * Handle level win
+     */
     handleWin() {
-        const hasNextLevel = this.levelManager.hasNextLevel();
-        
-        // Win message
-        const winText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            `YOU WIN!\n\n${this.level.name} Complete!`,
-            {
-                fontSize: '48px',
-                color: '#2ecc71',
-                fontStyle: 'bold',
-                align: 'center'
-            }
-        ).setOrigin(0.5).setDepth(200);
+        // Disable input
+        this.input.keyboard.enabled = false;
 
-        // Instructions
-        let instructionText = '';
-        if (hasNextLevel) {
-            instructionText = 'Press N for next level\nPress R to restart';
-        } else {
-            instructionText = 'All levels complete!\nPress R to restart';
+        // Friend celebration
+        if (this.friend) {
+            this.friend.celebrate();
         }
-        
-        const instructionDisplay = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2 + 100,
-            instructionText,
-            {
-                fontSize: '24px',
-                color: '#ecf0f1',
-                align: 'center'
-            }
-        ).setOrigin(0.5).setDepth(200);
 
-        // Next level on N key
-        if (hasNextLevel) {
-            this.input.keyboard.once('keydown-N', () => {
-                const currentIndex = this.levelManager.currentLevelIndex;
-                console.log(`Current level index before nextLevel(): ${currentIndex}`);
-                
-                // Advance to next level
-                const nextLevel = this.levelManager.nextLevel();
-                const newIndex = this.levelManager.currentLevelIndex;
-                
-                console.log(`After nextLevel() - new index: ${newIndex}, level: ${nextLevel ? nextLevel.name : 'null'}`);
-                
-                if (nextLevel) {
-                    console.log(`Restarting scene with levelIndex: ${newIndex}`);
-                    this.scene.restart({ levelIndex: newIndex });
-                } else {
-                    console.error('Failed to advance to next level');
+        // Show win screen after short delay
+        this.time.delayedCall(500, () => {
+            const hasNextLevel = this.levelManager.hasNextLevel();
+            
+            this.uiManager.showWinScreen(this.level.name, hasNextLevel, {
+                onNextLevel: () => {
+                    this.levelManager.nextLevel();
+                    this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
+                },
+                onRestart: () => {
+                    this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
                 }
             });
-        }
-
-        // Restart on R key
-        this.input.keyboard.once('keydown-R', () => {
-            this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
         });
+    }
+
+    /**
+     * Clean up when leaving scene
+     */
+    shutdown() {
+        // Clean up entities
+        if (this.player) this.player.destroy();
+        if (this.friend) this.friend.destroy();
+        this.pushables.forEach(p => p.destroy());
+        
+        // Clean up managers
+        if (this.uiManager) this.uiManager.destroy();
+        if (this.ruleManager) this.ruleManager.removeAllListeners();
+        if (this.gridPhysics) this.gridPhysics.clear();
     }
 }
