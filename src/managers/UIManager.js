@@ -342,9 +342,7 @@ export class UIManager {
      * Hide the pause menu
      */
     hidePauseMenu() {
-        this.isPaused = false;
-
-        // Animate out
+        // Animate out - keep isPaused true until animation completes
         this.scene.tweens.add({
             targets: this.pauseContainer,
             alpha: 0,
@@ -352,6 +350,11 @@ export class UIManager {
             ease: 'Power2',
             onComplete: () => {
                 this.pauseContainer.setVisible(false);
+                
+                // Small delay before re-enabling input to prevent accidental key capture
+                this.scene.time.delayedCall(50, () => {
+                    this.isPaused = false;
+                });
             }
         });
     }
@@ -610,8 +613,15 @@ export class UIManager {
      * Hide the riddle modal
      */
     hideModal(answeredCorrectly = false) {
-        this.isModalOpen = false;
-
+        // Keep modal state as "open" until animation completes
+        // This prevents input from being processed during the close animation
+        
+        // Clean up ESC key listener if it exists
+        if (this.escKey) {
+            this.escKey.removeAllListeners();
+            this.escKey = null;
+        }
+        
         // Animate out
         this.scene.tweens.add({
             targets: this.modalContainer,
@@ -628,6 +638,11 @@ export class UIManager {
 
                 this.currentGate = null;
                 this.currentRiddle = null;
+                
+                // Small delay before re-enabling input to prevent accidental key capture
+                this.scene.time.delayedCall(50, () => {
+                    this.isModalOpen = false;
+                });
             }
         });
     }
