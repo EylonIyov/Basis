@@ -488,7 +488,7 @@ export class UIManager {
     /**
      * Show win screen
      */
-    showWinScreen(levelName, hasNextLevel, callbacks = {}) {
+    showWinScreen(levelName, hasNextLevel, isLastLevel = false, callbacks = {}) {
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
 
@@ -499,8 +499,9 @@ export class UIManager {
         const overlay = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
         winContainer.add(overlay);
 
-        // Win text
-        const winText = this.scene.add.text(width / 2, height / 2 - 40, '★ LEVEL COMPLETE ★', {
+        // Win text - special message for completing all levels
+        const winMessage = isLastLevel ? '★ GAME COMPLETE! ★' : '★ LEVEL COMPLETE ★';
+        const winText = this.scene.add.text(width / 2, height / 2 - 40, winMessage, {
             fontSize: '48px',
             fontFamily: 'monospace',
             color: '#F1C40F',
@@ -516,10 +517,14 @@ export class UIManager {
         }).setOrigin(0.5);
         winContainer.add(levelText);
 
-        // Instructions
-        let instructions = 'Press R to restart';
-        if (hasNextLevel) {
+        // Instructions - different text for last level
+        let instructions;
+        if (isLastLevel) {
+            instructions = 'Congratulations! Press R to play again from Level 1';
+        } else if (hasNextLevel) {
             instructions = 'Press N for next level | Press R to restart';
+        } else {
+            instructions = 'Press R to restart';
         }
 
         const instructionText = this.scene.add.text(width / 2, height / 2 + 80, instructions, {
@@ -537,6 +542,9 @@ export class UIManager {
             duration: 500,
             ease: 'Power2'
         });
+
+        // Re-enable keyboard for win screen input
+        this.scene.input.keyboard.enabled = true;
 
         // Key handlers
         if (hasNextLevel) {

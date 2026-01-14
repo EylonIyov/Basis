@@ -8,6 +8,8 @@
  * 3 = Player Start position
  * 4 = Friend NPC (Win condition)
  * 5 = Pushable Block
+ * 6 = Socket (pressure plate for blocks)
+ * 7 = Special Wall (unlocks when socket is filled)
  */
 export class LevelLoader {
     constructor() {
@@ -37,6 +39,8 @@ export class LevelLoader {
             gates: [],
             walls: [],
             pushables: [],
+            sockets: [],      // Pressure plates for blocks
+            specialWalls: [], // Walls that unlock when sockets are filled
             matrix: matrix  // Store original matrix for reference
         };
 
@@ -108,6 +112,24 @@ export class LevelLoader {
                             y,
                             id: `pushable_${x}_${y}`,
                             type: 'block'
+                        });
+                        break;
+                    
+                    case 6: // Socket (pressure plate)
+                        level.sockets.push({
+                            x,
+                            y,
+                            id: `socket_${x}_${y}`,
+                            isFilled: false
+                        });
+                        break;
+                    
+                    case 7: // Special Wall (unlocks when sockets filled)
+                        level.specialWalls.push({
+                            x,
+                            y,
+                            id: `specialwall_${x}_${y}`,
+                            isUnlocked: false
                         });
                         break;
                     

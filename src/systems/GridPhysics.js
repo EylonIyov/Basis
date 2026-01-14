@@ -19,6 +19,7 @@ export class GridPhysics {
         this.walls = [];
         this.gates = [];
         this.pushables = [];
+        this.specialWalls = [];
         this.friend = null;
     }
 
@@ -48,8 +49,22 @@ export class GridPhysics {
         this.pushables = pushables;
     }
 
+    registerSpecialWalls(specialWalls) {
+        this.specialWalls = specialWalls || [];
+    }
+
     registerFriend(friend) {
         this.friend = friend;
+    }
+
+    /**
+     * Remove a special wall from collision detection
+     */
+    removeSpecialWall(wall) {
+        const index = this.specialWalls.findIndex(w => w.id === wall.id);
+        if (index !== -1) {
+            this.specialWalls.splice(index, 1);
+        }
     }
 
     /**
@@ -70,6 +85,10 @@ export class GridPhysics {
             const wallIsAir = this.ruleManager && this.ruleManager.isRuleActive('WALL_IS_AIR');
             if (!wallIsAir && this.isWallAt(toX, toY)) {
                 return { allowed: false, action: 'blocked', reason: 'wall' };
+            }
+            // Check special walls (locked)
+            if (this.isSpecialWallAt(toX, toY)) {
+                return { allowed: false, action: 'blocked', reason: 'special_wall' };
             }
         }
 
@@ -138,6 +157,11 @@ export class GridPhysics {
             return { allowed: false, reason: 'wall' };
         }
 
+        // Special walls block push
+        if (this.isSpecialWallAt(targetX, targetY)) {
+            return { allowed: false, reason: 'special_wall' };
+        }
+
         // Gates block push unless all gates are open
         const allGatesOpen = this.ruleManager && this.ruleManager.isRuleActive('GATE_IS_OPEN');
         const gate = this.getGateAt(targetX, targetY);
@@ -171,6 +195,16 @@ export class GridPhysics {
     isWallAt(gridX, gridY) {
         if (!this.walls) return false;
         return this.walls.some(wall => wall.gridX === gridX && wall.gridY === gridY);
+    }
+
+    /**
+     * Check if there's a locked special wall at grid position
+     */
+    isSpecialWallAt(gridX, gridY) {
+        if (!this.specialWalls) return false;
+        return this.specialWalls.some(wall => 
+            wall.gridX === gridX && wall.gridY === gridY && !wall.isUnlocked
+        );
     }
 
     /**
@@ -268,6 +302,7 @@ export class GridPhysics {
         this.walls = [];
         this.gates = [];
         this.pushables = [];
+        this.specialWalls = [];
         this.friend = null;
     }
 }

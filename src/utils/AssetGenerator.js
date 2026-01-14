@@ -254,7 +254,7 @@ export class AssetGenerator {
     }
 
     /**
-     * Generate tile sprites (wall, floor, gate)
+     * Generate tile sprites (wall, floor, gate, socket, special wall)
      */
     generateTileSprites() {
         const size = this.tileSize;
@@ -267,6 +267,12 @@ export class AssetGenerator {
         
         // Gate tile (open and closed states)
         this.generateGateSprite(size);
+        
+        // Socket (pressure plate for blocks)
+        this.generateSocketSprite(size);
+        
+        // Special wall (unlockable)
+        this.generateSpecialWallSprite(size);
 
         console.log('[AssetGenerator] Tile sprites generated');
     }
@@ -416,6 +422,134 @@ export class AssetGenerator {
         openCtx.stroke();
 
         this.scene.textures.addCanvas('gate_open', openCanvas);
+    }
+
+    /**
+     * Generate socket sprite - sunken pressure plate for blocks
+     */
+    generateSocketSprite(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Dark sunken base
+        ctx.fillStyle = '#0D0D1A';
+        ctx.fillRect(0, 0, size, size);
+
+        // Inner sunken area (darker)
+        const inset = 4;
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(inset, inset, size - inset * 2, size - inset * 2);
+
+        // 3D sunken effect - shadow on top/left (inside)
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(inset, inset, size - inset * 2, 3);
+        ctx.fillRect(inset, inset, 3, size - inset * 2);
+
+        // 3D sunken effect - highlight on bottom/right (inside)
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fillRect(inset, size - inset - 3, size - inset * 2, 3);
+        ctx.fillRect(size - inset - 3, inset, 3, size - inset * 2);
+
+        // Block outline indicator (dashed)
+        ctx.strokeStyle = '#F39C12';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        const outlineInset = 8;
+        ctx.strokeRect(outlineInset, outlineInset, size - outlineInset * 2, size - outlineInset * 2);
+
+        // Corner markers
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#F39C12';
+        const cornerSize = 4;
+        // Top-left
+        ctx.fillRect(outlineInset - 1, outlineInset - 1, cornerSize, cornerSize);
+        // Top-right
+        ctx.fillRect(size - outlineInset - cornerSize + 1, outlineInset - 1, cornerSize, cornerSize);
+        // Bottom-left
+        ctx.fillRect(outlineInset - 1, size - outlineInset - cornerSize + 1, cornerSize, cornerSize);
+        // Bottom-right
+        ctx.fillRect(size - outlineInset - cornerSize + 1, size - outlineInset - cornerSize + 1, cornerSize, cornerSize);
+
+        this.scene.textures.addCanvas('socket', canvas);
+        console.log('[AssetGenerator] Socket sprite generated');
+    }
+
+    /**
+     * Generate special wall sprite - glowing unlockable wall
+     */
+    generateSpecialWallSprite(size) {
+        // Locked state
+        const lockedCanvas = document.createElement('canvas');
+        lockedCanvas.width = size;
+        lockedCanvas.height = size;
+        const lockedCtx = lockedCanvas.getContext('2d');
+
+        // Base color - purple/magical
+        lockedCtx.fillStyle = '#5B2C6F';
+        lockedCtx.fillRect(2, 2, size - 4, size - 4);
+
+        // Brick pattern
+        lockedCtx.strokeStyle = '#4A235A';
+        lockedCtx.lineWidth = 1;
+        for (let y = 2; y < size - 2; y += 8) {
+            lockedCtx.beginPath();
+            lockedCtx.moveTo(2, y);
+            lockedCtx.lineTo(size - 2, y);
+            lockedCtx.stroke();
+        }
+
+        // Glowing runes/symbols
+        lockedCtx.strokeStyle = '#F39C12';
+        lockedCtx.lineWidth = 2;
+        // Draw a simple lock symbol
+        const centerX = size / 2;
+        const centerY = size / 2;
+        // Lock body
+        lockedCtx.fillStyle = '#F39C12';
+        lockedCtx.fillRect(centerX - 6, centerY - 2, 12, 10);
+        // Lock shackle
+        lockedCtx.strokeStyle = '#F39C12';
+        lockedCtx.lineWidth = 3;
+        lockedCtx.beginPath();
+        lockedCtx.arc(centerX, centerY - 4, 5, Math.PI, 0);
+        lockedCtx.stroke();
+
+        // Glowing border
+        lockedCtx.strokeStyle = '#F39C12';
+        lockedCtx.lineWidth = 2;
+        lockedCtx.strokeRect(2, 2, size - 4, size - 4);
+
+        // Outer glow effect
+        lockedCtx.strokeStyle = 'rgba(243, 156, 18, 0.3)';
+        lockedCtx.lineWidth = 4;
+        lockedCtx.strokeRect(0, 0, size, size);
+
+        this.scene.textures.addCanvas('special_wall_locked', lockedCanvas);
+
+        // Unlocked state (fading/disappearing)
+        const unlockedCanvas = document.createElement('canvas');
+        unlockedCanvas.width = size;
+        unlockedCanvas.height = size;
+        const unlockedCtx = unlockedCanvas.getContext('2d');
+
+        // Very faint ghost of the wall
+        unlockedCtx.fillStyle = 'rgba(91, 44, 111, 0.2)';
+        unlockedCtx.fillRect(2, 2, size - 4, size - 4);
+
+        // Sparkle particles (static)
+        unlockedCtx.fillStyle = '#F1C40F';
+        for (let i = 0; i < 5; i++) {
+            const px = 4 + Math.random() * (size - 8);
+            const py = 4 + Math.random() * (size - 8);
+            unlockedCtx.beginPath();
+            unlockedCtx.arc(px, py, 2, 0, Math.PI * 2);
+            unlockedCtx.fill();
+        }
+
+        this.scene.textures.addCanvas('special_wall_unlocked', unlockedCanvas);
+        console.log('[AssetGenerator] Special wall sprites generated');
     }
 
     /**

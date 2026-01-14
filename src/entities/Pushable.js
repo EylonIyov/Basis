@@ -11,6 +11,7 @@ export class Pushable {
         
         this.sprite = null;
         this.isMoving = false;
+        this.onMoved = null; // Callback when pushable finishes moving
         
         this.createSprite();
     }
@@ -136,6 +137,11 @@ export class Pushable {
                         yoyo: true,
                         ease: 'Bounce'
                     });
+                    
+                    // Call onMoved callback if set
+                    if (this.onMoved) {
+                        this.onMoved(targetX, targetY);
+                    }
                     
                     resolve();
                 }
