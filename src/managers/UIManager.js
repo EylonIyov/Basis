@@ -10,11 +10,13 @@ export class UIManager {
         
         // UI state
         this.isModalOpen = false;
+        this.isPaused = false;
         this.currentGate = null;
         this.currentRiddle = null;
         
         // UI elements
         this.modalContainer = null;
+        this.pauseContainer = null;
         this.hudContainer = null;
         this.answerButtons = [];
         this.answerMapping = [];
@@ -22,6 +24,7 @@ export class UIManager {
         // Callbacks
         this.onGateOpened = null;
         this.onRuleApplied = null;
+        this.onRestart = null;
         
         this.createUI();
     }
@@ -33,6 +36,7 @@ export class UIManager {
         this.createRiddleModal();
         this.createHUD();
         this.createRuleEffectDisplay();
+        this.createPauseModal();
     }
 
     /**
@@ -114,6 +118,8 @@ export class UIManager {
      * Create HUD elements (level info, active rules)
      */
     createHUD() {
+        const width = this.scene.cameras.main.width;
+        
         this.hudContainer = this.scene.add.container(10, 10);
         this.hudContainer.setDepth(50);
         this.hudContainer.setScrollFactor(0); // Fixed position
@@ -134,6 +140,47 @@ export class UIManager {
             color: '#3498DB'
         });
         this.hudContainer.add(this.activeRulesText);
+
+        // Pause button (top right)
+        const pauseBtn = this.scene.add.rectangle(width - 50, 15, 70, 30, 0x34495E);
+        pauseBtn.setStrokeStyle(2, 0xF1C40F);
+        pauseBtn.setInteractive({ useHandCursor: true });
+        pauseBtn.setScrollFactor(0);
+        pauseBtn.setDepth(50);
+
+        const pauseText = this.scene.add.text(width - 50, 15, 'PAUSE', {
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            color: '#F1C40F',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        pauseText.setScrollFactor(0);
+        pauseText.setDepth(51);
+
+        // Hover effects
+        pauseBtn.on('pointerover', () => {
+            pauseBtn.setFillStyle(0x4A6278);
+        });
+        pauseBtn.on('pointerout', () => {
+            pauseBtn.setFillStyle(0x34495E);
+        });
+
+        // Click handler
+        pauseBtn.on('pointerdown', () => {
+            this.showPauseMenu();
+        });
+
+        this.pauseButton = pauseBtn;
+        this.pauseButtonText = pauseText;
+
+        // ESC key also opens pause menu
+        this.scene.input.keyboard.on('keydown-ESC', () => {
+            if (!this.isModalOpen && !this.isPaused) {
+                this.showPauseMenu();
+            } else if (this.isPaused) {
+                this.hidePauseMenu();
+            }
+        });
     }
 
     /**
@@ -161,6 +208,152 @@ export class UIManager {
             align: 'center'
         }).setOrigin(0.5);
         this.ruleEffectContainer.add(this.ruleEffectText);
+    }
+
+    /**
+     * Create the pause modal (initially hidden)
+     */
+    createPauseModal() {
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+
+        this.pauseContainer = this.scene.add.container(0, 0);
+        this.pauseContainer.setVisible(false);
+        this.pauseContainer.setDepth(150);
+
+        // Dark overlay
+        const overlay = this.scene.add.rectangle(
+            width / 2, height / 2,
+            width, height,
+            0x000000, 0.85
+        );
+        overlay.setInteractive(); // Block clicks through
+        this.pauseContainer.add(overlay);
+
+        // Modal box
+        const modalWidth = 320;
+        const modalHeight = 280;
+        const modalX = width / 2;
+        const modalY = height / 2;
+
+        const modalBg = this.scene.add.rectangle(modalX, modalY, modalWidth, modalHeight, 0x1A1A2E);
+        modalBg.setStrokeStyle(3, 0xF1C40F);
+        this.pauseContainer.add(modalBg);
+
+        // Title
+        const title = this.scene.add.text(modalX, modalY - 90, 'PAUSED', {
+            fontSize: '36px',
+            fontFamily: 'monospace',
+            color: '#F1C40F',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.pauseContainer.add(title);
+
+        // Continue button
+        const continueBtn = this.scene.add.rectangle(modalX, modalY - 10, 200, 50, 0x2ECC71);
+        continueBtn.setStrokeStyle(2, 0x27AE60);
+        continueBtn.setInteractive({ useHandCursor: true });
+        this.pauseContainer.add(continueBtn);
+
+        const continueText = this.scene.add.text(modalX, modalY - 10, 'CONTINUE', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.pauseContainer.add(continueText);
+
+        // Continue button hover effects
+        continueBtn.on('pointerover', () => {
+            continueBtn.setFillStyle(0x27AE60);
+            continueBtn.setScale(1.05);
+            continueText.setScale(1.05);
+        });
+        continueBtn.on('pointerout', () => {
+            continueBtn.setFillStyle(0x2ECC71);
+            continueBtn.setScale(1);
+            continueText.setScale(1);
+        });
+        continueBtn.on('pointerdown', () => {
+            this.hidePauseMenu();
+        });
+
+        // Restart button
+        const restartBtn = this.scene.add.rectangle(modalX, modalY + 60, 200, 50, 0xE74C3C);
+        restartBtn.setStrokeStyle(2, 0xC0392B);
+        restartBtn.setInteractive({ useHandCursor: true });
+        this.pauseContainer.add(restartBtn);
+
+        const restartText = this.scene.add.text(modalX, modalY + 60, 'RESTART', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.pauseContainer.add(restartText);
+
+        // Restart button hover effects
+        restartBtn.on('pointerover', () => {
+            restartBtn.setFillStyle(0xC0392B);
+            restartBtn.setScale(1.05);
+            restartText.setScale(1.05);
+        });
+        restartBtn.on('pointerout', () => {
+            restartBtn.setFillStyle(0xE74C3C);
+            restartBtn.setScale(1);
+            restartText.setScale(1);
+        });
+        restartBtn.on('pointerdown', () => {
+            this.hidePauseMenu();
+            if (this.onRestart) {
+                this.onRestart();
+            }
+        });
+
+        // Hint text
+        const hintText = this.scene.add.text(modalX, modalY + 120, 'Press ESC to continue', {
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            color: '#7F8C8D'
+        }).setOrigin(0.5);
+        this.pauseContainer.add(hintText);
+    }
+
+    /**
+     * Show the pause menu
+     */
+    showPauseMenu() {
+        if (this.isModalOpen) return; // Don't pause if riddle is open
+        
+        this.isPaused = true;
+        this.pauseContainer.setVisible(true);
+        this.pauseContainer.setAlpha(0);
+
+        // Animate in
+        this.scene.tweens.add({
+            targets: this.pauseContainer,
+            alpha: 1,
+            duration: 150,
+            ease: 'Power2'
+        });
+    }
+
+    /**
+     * Hide the pause menu
+     */
+    hidePauseMenu() {
+        this.isPaused = false;
+
+        // Animate out
+        this.scene.tweens.add({
+            targets: this.pauseContainer,
+            alpha: 0,
+            duration: 150,
+            ease: 'Power2',
+            onComplete: () => {
+                this.pauseContainer.setVisible(false);
+            }
+        });
     }
 
     /**
@@ -559,10 +752,10 @@ export class UIManager {
     }
 
     /**
-     * Check if modal is currently open
+     * Check if modal is currently open (including pause menu)
      */
     isOpen() {
-        return this.isModalOpen;
+        return this.isModalOpen || this.isPaused;
     }
 
     /**
@@ -570,8 +763,11 @@ export class UIManager {
      */
     destroy() {
         if (this.modalContainer) this.modalContainer.destroy();
+        if (this.pauseContainer) this.pauseContainer.destroy();
         if (this.hudContainer) this.hudContainer.destroy();
         if (this.ruleEffectContainer) this.ruleEffectContainer.destroy();
+        if (this.pauseButton) this.pauseButton.destroy();
+        if (this.pauseButtonText) this.pauseButtonText.destroy();
     }
 }
 

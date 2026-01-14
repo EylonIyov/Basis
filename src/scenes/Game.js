@@ -516,6 +516,10 @@ export class Game extends Phaser.Scene {
             console.log(`[Game] Rule applied: ${effect.ruleId}`);
             this.applyRuleVisuals(effect.ruleId);
         };
+
+        this.uiManager.onRestart = () => {
+            this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
+        };
     }
 
     /**
