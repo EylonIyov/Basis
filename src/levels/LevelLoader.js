@@ -150,11 +150,14 @@ export class LevelLoader {
                         break;
                     
                     case 6: // Socket (pressure plate)
+                        const socketKey = `${y},${x}`; // Format: 'row,col'
+                        const socketMeta = options.socketData?.[socketKey] || {};
                         level.sockets.push({
                             x,
                             y,
-                            id: `socket_${x}_${y}`,
-                            isFilled: false
+                            id: socketMeta.id || `socket_${x}_${y}`,
+                            isFilled: false,
+                            unlocksWall: socketMeta.unlocksWall || null // Link to specific wall
                         });
                         break;
                     
