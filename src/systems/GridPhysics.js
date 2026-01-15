@@ -216,6 +216,21 @@ export class GridPhysics {
                 case 'steel':
                     if (this.ruleManager.isRuleActive('STEEL_IS_AIR')) return false;
                     break;
+                case 'emerald':
+                    if (this.ruleManager.isRuleActive('EMERALD_IS_AIR')) return false;
+                    break;
+                case 'gold':
+                    if (this.ruleManager.isRuleActive('GOLD_IS_AIR')) return false;
+                    break;
+                case 'diamond':
+                    if (this.ruleManager.isRuleActive('DIAMOND_IS_AIR')) return false;
+                    break;
+                case 'lapis':
+                    if (this.ruleManager.isRuleActive('LAPIS_IS_AIR')) return false;
+                    break;
+                case 'quartz':
+                    if (this.ruleManager.isRuleActive('QUARTZ_IS_AIR')) return false;
+                    break;
             }
         }
         

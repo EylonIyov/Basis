@@ -13,6 +13,7 @@ export class UIManager {
         this.isPaused = false;
         this.currentGate = null;
         this.currentRiddle = null;
+        this.pendingRuleEffect = null;  // Store effect to apply after modal closes
         
         // UI elements
         this.modalContainer = null;
@@ -382,7 +383,10 @@ export class UIManager {
         this.currentRiddle = riddle;
 
         // Update modal title based on riddle type
-        if (riddle.type === 'rule') {
+        if (riddle.type === 'choice') {
+            this.modalTitle.setText('⚙ CHOOSE YOUR PATH ⚙');
+            this.modalTitle.setColor('#E67E22');
+        } else if (riddle.type === 'rule') {
             this.modalTitle.setText('⚡ RULE RIDDLE ⚡');
             this.modalTitle.setColor('#9B59B6');
         } else {
@@ -442,27 +446,46 @@ export class UIManager {
         const buttonHeight = 45;
         const startY = modalY + 30;
 
-        // Shuffle answers
-        const shuffledAnswers = [...riddle.answers];
-        const correctAnswer = riddle.answers[riddle.correctAnswer];
+        // For choice riddles, don't shuffle (each answer maps to a specific effect)
+        const isChoiceRiddle = riddle.type === 'choice';
+        
+        let displayAnswers;
+        let answerToOriginalIndex = {};
+        
+        if (isChoiceRiddle) {
+            // Don't shuffle choice riddles - effects are tied to answer positions
+            displayAnswers = [...riddle.answers];
+            displayAnswers.forEach((answer, index) => {
+                answerToOriginalIndex[answer] = index;
+            });
+        } else {
+            // Shuffle regular riddles
+            displayAnswers = [...riddle.answers];
+            const correctAnswer = riddle.answers[riddle.correctAnswer];
 
-        for (let i = shuffledAnswers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledAnswers[i], shuffledAnswers[j]] = [shuffledAnswers[j], shuffledAnswers[i]];
+            for (let i = displayAnswers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [displayAnswers[i], displayAnswers[j]] = [displayAnswers[j], displayAnswers[i]];
+            }
+
+            const newCorrectIndex = displayAnswers.indexOf(correctAnswer);
+
+            // Store mapping for regular riddles
+            this.answerMapping = displayAnswers.map((answer, index) => ({
+                answer,
+                isCorrect: index === newCorrectIndex
+            }));
         }
 
-        const newCorrectIndex = shuffledAnswers.indexOf(correctAnswer);
-
-        // Store mapping
-        this.answerMapping = shuffledAnswers.map((answer, index) => ({
-            answer,
-            isCorrect: index === newCorrectIndex
-        }));
-
         // Create buttons in 2x2 grid
-        const maxAnswers = Math.min(shuffledAnswers.length, 4);
+        const maxAnswers = Math.min(displayAnswers.length, 4);
         
-        shuffledAnswers.slice(0, maxAnswers).forEach((answer, index) => {
+        // Different button colors for choice riddles
+        const buttonColor = isChoiceRiddle ? 0xE67E22 : 0x3498DB;
+        const buttonHoverColor = isChoiceRiddle ? 0xD35400 : 0x2980B9;
+        const buttonStrokeColor = isChoiceRiddle ? 0xD35400 : 0x2980B9;
+        
+        displayAnswers.slice(0, maxAnswers).forEach((answer, index) => {
             const row = Math.floor(index / 2);
             const col = index % 2;
             
@@ -470,8 +493,8 @@ export class UIManager {
             const buttonY = startY + row * 55;
 
             // Button rectangle
-            const buttonRect = this.scene.add.rectangle(buttonX, buttonY, buttonWidth, buttonHeight, 0x3498DB);
-            buttonRect.setStrokeStyle(2, 0x2980B9);
+            const buttonRect = this.scene.add.rectangle(buttonX, buttonY, buttonWidth, buttonHeight, buttonColor);
+            buttonRect.setStrokeStyle(2, buttonStrokeColor);
             buttonRect.setInteractive({ useHandCursor: true });
             this.modalContainer.add(buttonRect);
 
@@ -487,19 +510,22 @@ export class UIManager {
 
             // Hover effects
             buttonRect.on('pointerover', () => {
-                buttonRect.setFillStyle(0x2980B9);
+                buttonRect.setFillStyle(buttonHoverColor);
                 buttonRect.setScale(1.02);
             });
 
             buttonRect.on('pointerout', () => {
-                buttonRect.setFillStyle(0x3498DB);
+                buttonRect.setFillStyle(buttonColor);
                 buttonRect.setScale(1);
             });
 
             const buttonInfo = {
                 rect: buttonRect,
                 text: buttonText,
-                isCorrect: this.answerMapping[index].isCorrect
+                isCorrect: isChoiceRiddle ? true : this.answerMapping[index].isCorrect,
+                isChoiceRiddle: isChoiceRiddle,
+                originalAnswerIndex: isChoiceRiddle ? answerToOriginalIndex[answer] : index,
+                effect: isChoiceRiddle && riddle.effects ? riddle.effects[answerToOriginalIndex[answer]] : null
             };
 
             this.answerButtons.push(buttonInfo);
@@ -519,6 +545,30 @@ export class UIManager {
             btn.rect.setAlpha(0.6);
         });
 
+        // Handle choice riddles (all answers are valid, each triggers a different effect)
+        if (buttonInfo.isChoiceRiddle) {
+            // Highlight selected answer
+            buttonInfo.rect.setFillStyle(0x27AE60);
+            buttonInfo.rect.setStrokeStyle(2, 0x1E8449);
+            buttonInfo.rect.setAlpha(1);
+            
+            this.feedbackText.setText('✓ Choice made!');
+            this.feedbackText.setColor('#27AE60');
+            this.feedbackText.setVisible(true);
+
+            // Store the effect to apply AFTER modal closes (so user sees the animation)
+            if (buttonInfo.effect) {
+                this.pendingRuleEffect = buttonInfo.effect;
+            }
+
+            // Close modal and open gate
+            this.scene.time.delayedCall(1000, () => {
+                this.hideModal(true);
+            });
+            return;
+        }
+
+        // Handle regular riddles (barrier and rule types)
         if (buttonInfo.isCorrect) {
             // Correct answer
             buttonInfo.rect.setFillStyle(0x2ECC71);
@@ -529,11 +579,9 @@ export class UIManager {
             this.feedbackText.setColor('#2ECC71');
             this.feedbackText.setVisible(true);
 
-            // Check if this is a rule riddle
+            // Store rule effect to apply AFTER modal closes (so user sees the animation)
             if (this.currentRiddle.type === 'rule' && this.currentRiddle.effect) {
-                this.scene.time.delayedCall(500, () => {
-                    this.applyRuleEffect(this.currentRiddle.effect);
-                });
+                this.pendingRuleEffect = this.currentRiddle.effect;
             }
 
             // Close modal and open gate
@@ -622,6 +670,10 @@ export class UIManager {
             this.escKey.removeAllListeners();
             this.escKey = null;
         }
+
+        // Store pending effect before clearing state
+        const effectToApply = this.pendingRuleEffect;
+        this.pendingRuleEffect = null;
         
         // Animate out
         this.scene.tweens.add({
@@ -644,6 +696,13 @@ export class UIManager {
                 this.scene.time.delayedCall(50, () => {
                     this.isModalOpen = false;
                 });
+
+                // Apply rule effect AFTER modal is fully closed (so user sees the animation)
+                if (effectToApply) {
+                    this.scene.time.delayedCall(100, () => {
+                        this.applyRuleEffect(effectToApply);
+                    });
+                }
             }
         });
     }

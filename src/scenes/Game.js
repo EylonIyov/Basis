@@ -221,7 +221,12 @@ export class Game extends Phaser.Scene {
             brick: { fill: 0x8B4513, stroke: 0x5D2E0C },
             wood: { fill: 0xDEB887, stroke: 0x8B4513 },
             iron: { fill: 0x4A4A5A, stroke: 0x2A2A3A },
-            steel: { fill: 0x4A5568, stroke: 0x1A202C }
+            steel: { fill: 0x4A5568, stroke: 0x1A202C },
+            emerald: { fill: 0x2ECC71, stroke: 0x1E8449 },
+            gold: { fill: 0xF1C40F, stroke: 0xB7950B },
+            diamond: { fill: 0x85C1E9, stroke: 0x3498DB },
+            lapis: { fill: 0x1A5276, stroke: 0x0E2F44 },
+            quartz: { fill: 0xFADBD8, stroke: 0xE6B0AA }
         };
 
         this.level.walls.forEach(wallData => {
@@ -231,9 +236,11 @@ export class Game extends Phaser.Scene {
 
             let sprite;
             if (this.textures.exists(textureKey)) {
+                // Use specific texture for this wall type
                 sprite = this.add.image(pixelPos.x, pixelPos.y, textureKey);
                 sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
-            } else if (this.textures.exists('wall')) {
+            } else if (wallType === 'brick' && this.textures.exists('wall')) {
+                // Only use generic 'wall' texture for brick type
                 sprite = this.add.image(pixelPos.x, pixelPos.y, 'wall');
                 sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
             } else {
@@ -323,7 +330,9 @@ export class Game extends Phaser.Scene {
         if (!this.level.pushables) return;
 
         this.level.pushables.forEach(pushData => {
-            const pushable = new Pushable(this, pushData.x, pushData.y, this.gridPhysics);
+            // Pass the block type from level data (defaults to 'default')
+            const blockType = pushData.type || 'default';
+            const pushable = new Pushable(this, pushData.x, pushData.y, this.gridPhysics, blockType);
             // Add callback for when pushable moves
             pushable.onMoved = (newX, newY) => this.checkSocketActivation(pushable, newX, newY);
             this.pushables.push(pushable);
@@ -639,8 +648,8 @@ export class Game extends Phaser.Scene {
      * Apply visual effects when rules change
      */
     applyRuleVisuals(ruleId) {
-        // Handle wall type IS_AIR rules
-        const wallTypeMatch = ruleId.match(/^(BRICK|WOOD|IRON|STEEL)_IS_AIR$/);
+        // Handle wall type IS_AIR rules (including gem walls)
+        const wallTypeMatch = ruleId.match(/^(BRICK|WOOD|IRON|STEEL|EMERALD|GOLD|DIAMOND|LAPIS|QUARTZ)_IS_AIR$/);
         if (wallTypeMatch) {
             const wallType = wallTypeMatch[1].toLowerCase();
             this.applyWallTypeAirEffect(wallType, this.ruleManager.isRuleActive(ruleId));
@@ -653,6 +662,17 @@ export class Game extends Phaser.Scene {
             const wallType = shuffleMatch[1].toLowerCase();
             if (this.ruleManager.isRuleActive(ruleId)) {
                 this.shuffleWallsOfType(wallType);
+            }
+            return;
+        }
+
+        // Handle wall transformation rules (WALLTYPE_TO_WALLTYPE)
+        const transformMatch = ruleId.match(/^(STEEL|IRON|WOOD|LAPIS|GOLD)_TO_(EMERALD|STEEL|IRON|WOOD|DIAMOND|LAPIS)$/);
+        if (transformMatch) {
+            const fromType = transformMatch[1].toLowerCase();
+            const toType = transformMatch[2].toLowerCase();
+            if (this.ruleManager.isRuleActive(ruleId)) {
+                this.transformWallType(fromType, toType);
             }
             return;
         }
@@ -771,6 +791,150 @@ export class Game extends Phaser.Scene {
                 onComplete: () => particle.destroy()
             });
         }
+    }
+
+    /**
+     * Transform walls of one type into another type with visual effect
+     */
+    transformWallType(fromType, toType) {
+        const wallsOfType = this.walls.filter(w => (w.type || 'brick') === fromType);
+        
+        if (wallsOfType.length === 0) return;
+
+        // Colors for the transformation particles
+        const typeColors = {
+            brick: 0x8B4513,
+            wood: 0xDEB887,
+            iron: 0x4A4A5A,
+            steel: 0x4A5568,
+            emerald: 0x2ECC71,
+            gold: 0xF1C40F,
+            diamond: 0x85C1E9,
+            lapis: 0x1A5276,
+            quartz: 0xFADBD8
+        };
+
+        // Fallback colors for wall rendering
+        const fallbackColors = {
+            brick: { fill: 0x8B4513, stroke: 0x5D2E0C },
+            wood: { fill: 0xDEB887, stroke: 0x8B4513 },
+            iron: { fill: 0x4A4A5A, stroke: 0x2A2A3A },
+            steel: { fill: 0x4A5568, stroke: 0x1A202C },
+            emerald: { fill: 0x2ECC71, stroke: 0x1E8449 },
+            gold: { fill: 0xF1C40F, stroke: 0xB7950B },
+            diamond: { fill: 0x85C1E9, stroke: 0x3498DB },
+            lapis: { fill: 0x1A5276, stroke: 0x0E2F44 },
+            quartz: { fill: 0xFADBD8, stroke: 0xE6B0AA }
+        };
+
+        const fromColor = typeColors[fromType] || 0x888888;
+        const toColor = typeColors[toType] || 0x888888;
+
+        wallsOfType.forEach((wall, index) => {
+            const pixelPos = { x: wall.sprite.x, y: wall.sprite.y };
+            
+            // Create swirling transformation particles
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const radius = 15 + Math.random() * 10;
+                const startX = pixelPos.x + Math.cos(angle) * radius;
+                const startY = pixelPos.y + Math.sin(angle) * radius;
+                
+                // Mix of old and new colors
+                const particleColor = Math.random() > 0.5 ? fromColor : toColor;
+                const particle = this.add.circle(startX, startY, 3, particleColor, 0.9);
+                particle.setDepth(25);
+
+                // Spiral inward animation
+                this.tweens.add({
+                    targets: particle,
+                    x: pixelPos.x,
+                    y: pixelPos.y,
+                    scale: 0.5,
+                    alpha: 0,
+                    duration: 400 + Math.random() * 200,
+                    ease: 'Cubic.in',
+                    delay: i * 30,
+                    onComplete: () => particle.destroy()
+                });
+            }
+
+            // Flash effect on the wall
+            this.tweens.add({
+                targets: wall.sprite,
+                alpha: 0.3,
+                duration: 300,
+                ease: 'Power2',
+                delay: index * 50,
+                onComplete: () => {
+                    // Update wall type
+                    wall.type = toType;
+
+                    // Create new sprite with new color
+                    const newColors = fallbackColors[toType] || fallbackColors.brick;
+                    
+                    // Destroy old sprite
+                    wall.sprite.destroy();
+                    
+                    // Create new sprite
+                    const textureKey = `wall_${toType}`;
+                    let newSprite;
+                    
+                    if (this.textures.exists(textureKey)) {
+                        newSprite = this.add.image(pixelPos.x, pixelPos.y, textureKey);
+                        newSprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+                    } else if (toType === 'brick' && this.textures.exists('wall')) {
+                        newSprite = this.add.image(pixelPos.x, pixelPos.y, 'wall');
+                        newSprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+                    } else {
+                        newSprite = this.add.rectangle(
+                            pixelPos.x, pixelPos.y,
+                            this.tileSize - 4, this.tileSize - 4,
+                            newColors.fill
+                        );
+                        newSprite.setStrokeStyle(2, newColors.stroke);
+                    }
+                    
+                    newSprite.setDepth(3);
+                    newSprite.setAlpha(0);
+                    wall.sprite = newSprite;
+
+                    // Burst effect with new color
+                    for (let j = 0; j < 8; j++) {
+                        const burstAngle = (j / 8) * Math.PI * 2;
+                        const burstParticle = this.add.circle(
+                            pixelPos.x,
+                            pixelPos.y,
+                            4,
+                            toColor,
+                            0.9
+                        );
+                        burstParticle.setDepth(26);
+
+                        this.tweens.add({
+                            targets: burstParticle,
+                            x: pixelPos.x + Math.cos(burstAngle) * 25,
+                            y: pixelPos.y + Math.sin(burstAngle) * 25,
+                            alpha: 0,
+                            scale: 0.2,
+                            duration: 400,
+                            ease: 'Power2',
+                            onComplete: () => burstParticle.destroy()
+                        });
+                    }
+
+                    // Fade in new wall
+                    this.tweens.add({
+                        targets: newSprite,
+                        alpha: 1,
+                        duration: 400,
+                        ease: 'Power2'
+                    });
+                }
+            });
+        });
+
+        console.log(`[Game] Transformed ${wallsOfType.length} ${fromType} walls into ${toType}`);
     }
 
     /**
@@ -967,7 +1131,16 @@ export class Game extends Phaser.Scene {
             }
         }
         
-        // Priority 2: Rule gate - find matching riddle by ruleId
+        // Priority 2: Choice gate - get a choice riddle (each answer triggers different rule)
+        if (!riddle && gate.type === 'choice') {
+            console.log(`[Game] Gate is choice type, getting choice riddle`);
+            riddle = this.riddleManager.getChoiceRiddle();
+            if (riddle) {
+                console.log(`[Game] Found choice riddle: ${riddle.id}`);
+            }
+        }
+        
+        // Priority 3: Rule gate - find matching riddle by ruleId
         if (!riddle && gate.type === 'rule' && gate.ruleEffect) {
             console.log(`[Game] Looking for riddle matching rule: ${gate.ruleEffect.ruleId}`);
             riddle = this.riddleManager.getRiddleForRule(gate.ruleEffect.ruleId);
@@ -978,7 +1151,7 @@ export class Game extends Phaser.Scene {
             }
         }
         
-        // Priority 3: Fallback to random barrier riddle
+        // Priority 4: Fallback to random barrier riddle
         if (!riddle) {
             riddle = this.riddleManager.getBarrierRiddle();
         }

@@ -1,12 +1,16 @@
 /**
  * RiddleManager - Loads and manages riddles from JSON files
- * Supports both Barrier Riddles (local effect) and Rule Riddles (systemic effect)
+ * Supports:
+ * - Barrier Riddles (local effect - just open the gate)
+ * - Rule Riddles (systemic effect - trigger one rule on correct answer)
+ * - Choice Riddles (each of 4 answers triggers a different rule)
  */
 export class RiddleManager {
     constructor() {
         this.riddles = [];
         this.barrierRiddles = [];
         this.ruleRiddles = [];
+        this.choiceRiddles = [];
         this.usedRiddles = new Set();
     }
 
@@ -24,13 +28,15 @@ export class RiddleManager {
             // Separate riddles by type
             this.barrierRiddles = this.riddles.filter(r => r.type === 'barrier' || !r.type);
             this.ruleRiddles = this.riddles.filter(r => r.type === 'rule');
+            this.choiceRiddles = this.riddles.filter(r => r.type === 'choice');
             
-            console.log(`[RiddleManager] Loaded ${this.riddles.length} riddles (${this.barrierRiddles.length} barrier, ${this.ruleRiddles.length} rule)`);
+            console.log(`[RiddleManager] Loaded ${this.riddles.length} riddles (${this.barrierRiddles.length} barrier, ${this.ruleRiddles.length} rule, ${this.choiceRiddles.length} choice)`);
         } catch (error) {
             console.error('[RiddleManager] Error loading riddles:', error);
             this.riddles = [];
             this.barrierRiddles = [];
             this.ruleRiddles = [];
+            this.choiceRiddles = [];
         }
     }
 
@@ -59,8 +65,16 @@ export class RiddleManager {
     }
 
     /**
+     * Get a random choice riddle
+     * @returns {Object|null} A choice riddle object
+     */
+    getChoiceRiddle() {
+        return this.getRandomRiddleOfType('choice');
+    }
+
+    /**
      * Get a random riddle of a specific type
-     * @param {string|null} type - 'barrier', 'rule', or null for any
+     * @param {string|null} type - 'barrier', 'rule', 'choice', or null for any
      * @returns {Object|null}
      */
     getRandomRiddleOfType(type) {
@@ -70,6 +84,8 @@ export class RiddleManager {
             pool = this.barrierRiddles;
         } else if (type === 'rule') {
             pool = this.ruleRiddles;
+        } else if (type === 'choice') {
+            pool = this.choiceRiddles;
         } else {
             pool = this.riddles;
         }
@@ -156,6 +172,28 @@ export class RiddleManager {
     }
 
     /**
+     * Get the effect for a specific answer in a choice riddle
+     * @param {Object} riddle - The choice riddle object
+     * @param {number} answerIndex - The index of the selected answer
+     * @returns {Object|null} The effect object for that answer or null
+     */
+    getChoiceEffect(riddle, answerIndex) {
+        if (!riddle || riddle.type !== 'choice' || !riddle.effects) {
+            return null;
+        }
+        return riddle.effects[answerIndex] || null;
+    }
+
+    /**
+     * Check if a riddle is a choice riddle (all answers valid)
+     * @param {Object} riddle - The riddle object
+     * @returns {boolean}
+     */
+    isChoiceRiddle(riddle) {
+        return riddle && riddle.type === 'choice';
+    }
+
+    /**
      * Reset the used riddles tracking
      */
     resetUsedRiddles() {
@@ -179,6 +217,7 @@ export class RiddleManager {
             total: this.riddles.length,
             barrier: this.barrierRiddles.length,
             rule: this.ruleRiddles.length,
+            choice: this.choiceRiddles.length,
             used: this.usedRiddles.size
         };
     }

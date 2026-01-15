@@ -15,6 +15,20 @@ export class RuleManager extends Phaser.Events.EventEmitter {
             'WOOD_IS_AIR': false,      // Wood walls become passable
             'IRON_IS_AIR': false,      // Iron walls become passable
             'STEEL_IS_AIR': false,     // Steel walls become passable
+            'EMERALD_IS_AIR': false,   // Emerald walls become passable
+            'GOLD_IS_AIR': false,      // Gold walls become passable
+            'DIAMOND_IS_AIR': false,   // Diamond walls become passable
+            'LAPIS_IS_AIR': false,     // Lapis walls become passable
+            'QUARTZ_IS_AIR': false,    // Quartz walls become passable
+            
+            // Transformation rules - one wall type becomes another
+            'STEEL_TO_EMERALD': false,  // Steel walls transform into emerald
+            'IRON_TO_STEEL': false,     // Iron walls transform into steel
+            'STEEL_TO_IRON': false,     // Steel walls transform into iron
+            'WOOD_TO_IRON': false,      // Wood walls transform into iron
+            'IRON_TO_WOOD': false,      // Iron walls transform into wood
+            'LAPIS_TO_DIAMOND': false,  // Lapis walls transform into diamond
+            'GOLD_TO_LAPIS': false,     // Gold walls transform into lapis
             
             // Shuffle rules - walls move to alternate positions
             'BRICK_SHUFFLE': false,    // Brick walls shuffle positions
@@ -222,6 +236,18 @@ export class RuleManager extends Phaser.Events.EventEmitter {
             'WOOD_IS_AIR': false,
             'IRON_IS_AIR': false,
             'STEEL_IS_AIR': false,
+            'EMERALD_IS_AIR': false,
+            'GOLD_IS_AIR': false,
+            'DIAMOND_IS_AIR': false,
+            'LAPIS_IS_AIR': false,
+            'QUARTZ_IS_AIR': false,
+            'STEEL_TO_EMERALD': false,
+            'IRON_TO_STEEL': false,
+            'STEEL_TO_IRON': false,
+            'WOOD_TO_IRON': false,
+            'IRON_TO_WOOD': false,
+            'LAPIS_TO_DIAMOND': false,
+            'GOLD_TO_LAPIS': false,
             'BRICK_SHUFFLE': false,
             'WOOD_SHUFFLE': false,
             'IRON_SHUFFLE': false,
