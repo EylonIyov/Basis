@@ -13,6 +13,13 @@
  * 8  = Wood Wall (affected by WOOD_IS_AIR, can shuffle)
  * 9  = Iron Wall (affected by IRON_IS_AIR)
  * 10 = Steel Wall (affected by STEEL_IS_AIR)
+ * 
+ * Gem Walls (decorative, affected by respective _IS_AIR rules):
+ * 11 = Emerald Wall (green gem)
+ * 12 = Gold Wall (golden metal)
+ * 13 = Diamond Wall (light cyan crystal)
+ * 14 = Lapis Wall (dark blue stone)
+ * 15 = Quartz Wall (white/pink crystal)
  */
 export class LevelLoader {
     constructor() {
@@ -145,7 +152,57 @@ export class LevelLoader {
                             x,
                             y,
                             id: `pushable_${x}_${y}`,
-                            type: 'block'
+                            type: 'default'
+                        });
+                        break;
+                    
+                    case 11: // Emerald Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'emerald'
+                        });
+                        break;
+                    
+                    case 12: // Gold Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'gold'
+                        });
+                        break;
+                    
+                    case 13: // Diamond Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'diamond'
+                        });
+                        break;
+                    
+                    case 14: // Lapis Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'lapis'
+                        });
+                        break;
+                    
+                    case 15: // Quartz Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'quartz'
                         });
                         break;
                     

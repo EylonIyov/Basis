@@ -323,7 +323,9 @@ export class Game extends Phaser.Scene {
         if (!this.level.pushables) return;
 
         this.level.pushables.forEach(pushData => {
-            const pushable = new Pushable(this, pushData.x, pushData.y, this.gridPhysics);
+            // Pass the block type from level data (defaults to 'default')
+            const blockType = pushData.type || 'default';
+            const pushable = new Pushable(this, pushData.x, pushData.y, this.gridPhysics, blockType);
             // Add callback for when pushable moves
             pushable.onMoved = (newX, newY) => this.checkSocketActivation(pushable, newX, newY);
             this.pushables.push(pushable);
