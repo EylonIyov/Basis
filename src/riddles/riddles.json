@@ -316,6 +316,323 @@
         "value": true,
         "description": "PLAYER IS GHOST - Phase through everything!"
       }
+    },
+    {
+      "id": "riddle_steel_emerald",
+      "type": "rule",
+      "question": "ALCHEMY: When cold steel meets nature's magic, it transforms into...",
+      "answers": [
+        "Emerald gemstone",
+        "Molten lava",
+        "Pure gold",
+        "Empty air"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "STEEL_TO_EMERALD",
+        "value": true,
+        "description": "TRANSMUTATION - Steel becomes Emerald!"
+      }
+    },
+    {
+      "id": "riddle_iron_steel",
+      "type": "rule",
+      "question": "METALLURGY: When iron is forged with carbon under extreme heat, it becomes...",
+      "answers": [
+        "Steel alloy",
+        "Pure gold",
+        "Soft copper",
+        "Brittle glass"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "IRON_TO_STEEL",
+        "value": true,
+        "description": "FORGING - Iron hardens into Steel!"
+      }
+    },
+    {
+      "id": "riddle_steel_iron",
+      "type": "rule",
+      "question": "ENTROPY: Over centuries of neglect, even mighty steel will...",
+      "answers": [
+        "Decay back to iron",
+        "Turn to diamond",
+        "Become stronger",
+        "Float away"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "STEEL_TO_IRON",
+        "value": true,
+        "description": "DECAY - Steel rusts back to Iron!"
+      }
+    },
+    {
+      "id": "riddle_wood_iron",
+      "type": "rule",
+      "question": "PETRIFICATION: The ancient curse turns living wood into...",
+      "answers": [
+        "Cold iron",
+        "Warm bread",
+        "Fresh flowers",
+        "Pure water"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "WOOD_TO_IRON",
+        "value": true,
+        "description": "PETRIFICATION - Wood becomes Iron!"
+      }
+    },
+    {
+      "id": "riddle_iron_wood",
+      "type": "rule",
+      "question": "NATURE'S MAGIC: The forest spirit can reverse the curse, turning iron back to...",
+      "answers": [
+        "Living wood",
+        "Solid stone",
+        "Pure crystal",
+        "Empty void"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "IRON_TO_WOOD",
+        "value": true,
+        "description": "NATURALIZATION - Iron becomes Wood!"
+      }
+    },
+    {
+      "id": "riddle_lapis_diamond",
+      "type": "rule",
+      "question": "CRYSTALLIZATION: Under immense pressure, lapis lazuli can crystallize into...",
+      "answers": [
+        "Pure diamond",
+        "Soft clay",
+        "Flowing water",
+        "Dense fog"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "LAPIS_TO_DIAMOND",
+        "value": true,
+        "description": "CRYSTALLIZATION - Lapis becomes Diamond!"
+      }
+    },
+    {
+      "id": "riddle_gold_lapis",
+      "type": "rule",
+      "question": "DEEPENING: When gold sinks into the ocean depths, it absorbs the essence of...",
+      "answers": [
+        "Deep blue lapis",
+        "Bright emerald",
+        "Pure quartz",
+        "Red ruby"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "GOLD_TO_LAPIS",
+        "value": true,
+        "description": "DEEPENING - Gold becomes Lapis!"
+      }
+    },
+    {
+      "id": "choice_elements",
+      "type": "choice",
+      "question": "The ancient elements await your command. Which power do you invoke?",
+      "answers": [
+        "🔥 Fire - Burn the wood",
+        "💧 Water - Rust the iron",
+        "⚡ Lightning - Melt the steel",
+        "🌪️ Wind - Crumble the brick"
+      ],
+      "effects": [
+        {
+          "ruleId": "WOOD_IS_AIR",
+          "value": true,
+          "description": "FIRE INVOKED - Wood burns away!"
+        },
+        {
+          "ruleId": "IRON_IS_AIR",
+          "value": true,
+          "description": "WATER INVOKED - Iron rusts away!"
+        },
+        {
+          "ruleId": "STEEL_IS_AIR",
+          "value": true,
+          "description": "LIGHTNING INVOKED - Steel melts away!"
+        },
+        {
+          "ruleId": "BRICK_IS_AIR",
+          "value": true,
+          "description": "WIND INVOKED - Brick crumbles away!"
+        }
+      ]
+    },
+    {
+      "id": "choice_gems",
+      "type": "choice",
+      "question": "A mystical gem offers its power. Which gemstone's essence do you absorb?",
+      "answers": [
+        "💎 Diamond - Crystal clarity",
+        "💚 Emerald - Nature's path",
+        "💙 Lapis - Deep wisdom",
+        "🤍 Quartz - Pure energy"
+      ],
+      "effects": [
+        {
+          "ruleId": "DIAMOND_IS_AIR",
+          "value": true,
+          "description": "DIAMOND ABSORBED - Diamond walls shatter!"
+        },
+        {
+          "ruleId": "EMERALD_IS_AIR",
+          "value": true,
+          "description": "EMERALD ABSORBED - Emerald walls dissolve!"
+        },
+        {
+          "ruleId": "LAPIS_IS_AIR",
+          "value": true,
+          "description": "LAPIS ABSORBED - Lapis walls crumble!"
+        },
+        {
+          "ruleId": "QUARTZ_IS_AIR",
+          "value": true,
+          "description": "QUARTZ ABSORBED - Quartz walls fade!"
+        }
+      ]
+    },
+    {
+      "id": "choice_speed",
+      "type": "choice",
+      "question": "Time bends before you. How do you wish to move through this realm?",
+      "answers": [
+        "⚡ Swift as lightning",
+        "🐢 Slow and steady",
+        "👻 Like a ghost",
+        "🚪 Open all doors"
+      ],
+      "effects": [
+        {
+          "ruleId": "PLAYER_IS_FAST",
+          "value": true,
+          "description": "SWIFT MODE - Lightning speed activated!"
+        },
+        {
+          "ruleId": "PLAYER_IS_SLOW",
+          "value": true,
+          "description": "STEADY MODE - Slow and careful!"
+        },
+        {
+          "ruleId": "PLAYER_IS_GHOST",
+          "value": true,
+          "description": "GHOST MODE - Phase through walls!"
+        },
+        {
+          "ruleId": "GATE_IS_OPEN",
+          "value": true,
+          "description": "OPEN MODE - All gates unlocked!"
+        }
+      ]
+    },
+    {
+      "id": "choice_transform_metal",
+      "type": "choice",
+      "question": "The alchemist offers to transmute the metals. Choose the transformation:",
+      "answers": [
+        "🔩 Steel → Emerald",
+        "⚙️ Iron → Steel",
+        "🪨 Steel → Iron",
+        "🪵 Wood → Iron"
+      ],
+      "effects": [
+        {
+          "ruleId": "STEEL_TO_EMERALD",
+          "value": true,
+          "description": "TRANSMUTATION - Steel becomes Emerald!"
+        },
+        {
+          "ruleId": "IRON_TO_STEEL",
+          "value": true,
+          "description": "FORGING - Iron hardens into Steel!"
+        },
+        {
+          "ruleId": "STEEL_TO_IRON",
+          "value": true,
+          "description": "DECAY - Steel rusts back to Iron!"
+        },
+        {
+          "ruleId": "WOOD_TO_IRON",
+          "value": true,
+          "description": "PETRIFICATION - Wood turns to Iron!"
+        }
+      ]
+    },
+    {
+      "id": "choice_transform_gems",
+      "type": "choice",
+      "question": "The crystal sage can reshape gemstones. Which transmutation do you seek?",
+      "answers": [
+        "💙 Lapis → Diamond",
+        "💛 Gold → Lapis",
+        "🔩 Steel → Emerald",
+        "⚙️ Iron → Steel"
+      ],
+      "effects": [
+        {
+          "ruleId": "LAPIS_TO_DIAMOND",
+          "value": true,
+          "description": "CRYSTALLIZATION - Lapis becomes Diamond!"
+        },
+        {
+          "ruleId": "GOLD_TO_LAPIS",
+          "value": true,
+          "description": "DEEPENING - Gold transforms to Lapis!"
+        },
+        {
+          "ruleId": "STEEL_TO_EMERALD",
+          "value": true,
+          "description": "TRANSMUTATION - Steel becomes Emerald!"
+        },
+        {
+          "ruleId": "IRON_TO_STEEL",
+          "value": true,
+          "description": "FORGING - Iron hardens into Steel!"
+        }
+      ]
+    },
+    {
+      "id": "choice_transform_nature",
+      "type": "choice",
+      "question": "The forest spirit offers to reshape the world. What transformation do you desire?",
+      "answers": [
+        "🌳 Iron → Wood",
+        "🪵 Wood → Iron",
+        "🪨 Steel → Iron",
+        "💛 Gold → Lapis"
+      ],
+      "effects": [
+        {
+          "ruleId": "IRON_TO_WOOD",
+          "value": true,
+          "description": "NATURALIZATION - Iron becomes living Wood!"
+        },
+        {
+          "ruleId": "WOOD_TO_IRON",
+          "value": true,
+          "description": "PETRIFICATION - Wood becomes cold Iron!"
+        },
+        {
+          "ruleId": "STEEL_TO_IRON",
+          "value": true,
+          "description": "DECAY - Steel rusts back to Iron!"
+        },
+        {
+          "ruleId": "GOLD_TO_LAPIS",
+          "value": true,
+          "description": "DEEPENING - Gold sinks into Lapis!"
+        }
+      ]
     }
   ]
 }
