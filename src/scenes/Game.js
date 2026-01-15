@@ -947,12 +947,17 @@ export class Game extends Phaser.Scene {
     handleGateCollision(gate) {
         if (!gate || gate.isOpen) return;
 
+        console.log(`[Game] Gate collision: id=${gate.id}, type=${gate.type}, ruleEffect=`, gate.ruleEffect);
+
         // Get appropriate riddle based on gate type
         let riddle;
         if (gate.type === 'rule' && gate.ruleEffect) {
-            // Use a rule riddle and attach the gate's effect
-            riddle = this.riddleManager.getRuleRiddle();
+            console.log(`[Game] Looking for riddle matching rule: ${gate.ruleEffect.ruleId}`);
+            // Get a riddle that matches this specific rule effect
+            riddle = this.riddleManager.getRiddleForRule(gate.ruleEffect.ruleId);
             if (riddle) {
+                console.log(`[Game] Found riddle: ${riddle.id}, question: ${riddle.question.substring(0, 50)}...`);
+                // Override the riddle's effect with the gate's specific effect
                 riddle = { ...riddle, effect: gate.ruleEffect };
             }
         } else {

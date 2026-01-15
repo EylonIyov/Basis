@@ -368,8 +368,9 @@ export class UIManager {
         this.currentGate = gate;
         this.isModalOpen = true;
 
-        // Get riddle - check if it's a rule riddle or barrier riddle
-        const riddle = this.riddleManager.getRandomRiddle();
+        // Use already-set riddle if available (set by Game.handleGateCollision for rule gates)
+        // Otherwise fall back to a random riddle
+        const riddle = this.currentRiddle || this.riddleManager.getRandomRiddle();
         
         if (!riddle) {
             console.error('[UIManager] No riddle available');
