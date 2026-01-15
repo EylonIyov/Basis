@@ -362,6 +362,7 @@ export class Game extends Phaser.Scene {
                 gridY: socketData.y,
                 id: socketData.id,
                 isFilled: false,
+                unlocksWall: socketData.unlocksWall || null,  // Link to specific wall
                 sprite: sprite
             };
 
@@ -443,13 +444,80 @@ export class Game extends Phaser.Scene {
             ease: 'Power2'
         });
 
-        // Check if all sockets are filled
-        const allSocketsFilled = this.sockets.every(s => s.isFilled);
-        
-        if (allSocketsFilled) {
-            // Unlock all special walls
-            this.unlockSpecialWalls();
+        // Check if this socket has a linked wall to unlock
+        if (socket.unlocksWall) {
+            console.log(`[Game] Socket at (${socket.gridX}, ${socket.gridY}) activated, looking for wall at row=${socket.unlocksWall.row}, col=${socket.unlocksWall.col}`);
+            // Find and unlock the specific linked wall
+            const linkedWall = this.specialWalls.find(
+                w => w.gridY === socket.unlocksWall.row && w.gridX === socket.unlocksWall.col
+            );
+            if (linkedWall && !linkedWall.isUnlocked) {
+                console.log(`[Game] Found linked wall, unlocking it!`);
+                this.unlockSpecialWall(linkedWall);
+            } else {
+                console.log(`[Game] No matching wall found. Available walls:`, this.specialWalls.map(w => `(${w.gridX}, ${w.gridY})`));
+            }
+        } else {
+            console.log(`[Game] Socket at (${socket.gridX}, ${socket.gridY}) has no linked wall, using fallback logic`);
+            // Fallback: Check if all sockets are filled (for levels without specific linking)
+            const allSocketsFilled = this.sockets.every(s => s.isFilled);
+            if (allSocketsFilled) {
+                this.unlockSpecialWalls();
+            }
         }
+    }
+
+    /**
+     * Unlock a single special wall with visual effect
+     */
+    unlockSpecialWall(wall) {
+        if (wall.isUnlocked) return;
+        
+        wall.isUnlocked = true;
+        console.log(`[Game] Unlocking special wall at (${wall.gridX}, ${wall.gridY})`);
+
+        // Stop the pulsing animation
+        this.tweens.killTweensOf(wall.sprite);
+
+        // Create particle burst
+        const pixelPos = { x: wall.sprite.x, y: wall.sprite.y };
+        for (let i = 0; i < 15; i++) {
+            const particle = this.add.circle(
+                pixelPos.x + (Math.random() - 0.5) * this.tileSize,
+                pixelPos.y + (Math.random() - 0.5) * this.tileSize,
+                3 + Math.random() * 3,
+                0xF1C40F,
+                0.8
+            );
+            particle.setDepth(20);
+
+            this.tweens.add({
+                targets: particle,
+                x: particle.x + (Math.random() - 0.5) * 60,
+                y: particle.y - 20 - Math.random() * 40,
+                alpha: 0,
+                scale: 0,
+                duration: 600 + Math.random() * 400,
+                ease: 'Power2',
+                onComplete: () => particle.destroy()
+            });
+        }
+
+        // Fade out and shrink the wall
+        this.tweens.add({
+            targets: wall.sprite,
+            alpha: 0,
+            scaleX: 0,
+            scaleY: 0,
+            duration: 500,
+            ease: 'Back.in',
+            onComplete: () => {
+                wall.sprite.setVisible(false);
+            }
+        });
+
+        // Remove from physics collision
+        this.gridPhysics.removeSpecialWall(wall);
     }
 
     /**
@@ -457,56 +525,10 @@ export class Game extends Phaser.Scene {
      */
     unlockSpecialWalls() {
         this.specialWalls.forEach(wall => {
-            if (wall.isUnlocked) return;
-            
-            wall.isUnlocked = true;
-
-            // Stop the pulsing animation
-            this.tweens.killTweensOf(wall.sprite);
-
-            // Create particle burst
-            const pixelPos = { x: wall.sprite.x, y: wall.sprite.y };
-            for (let i = 0; i < 15; i++) {
-                const particle = this.add.circle(
-                    pixelPos.x + (Math.random() - 0.5) * this.tileSize,
-                    pixelPos.y + (Math.random() - 0.5) * this.tileSize,
-                    3 + Math.random() * 3,
-                    0xF1C40F,
-                    0.8
-                );
-                particle.setDepth(20);
-
-                this.tweens.add({
-                    targets: particle,
-                    x: particle.x + (Math.random() - 0.5) * 60,
-                    y: particle.y - 20 - Math.random() * 40,
-                    alpha: 0,
-                    scale: 0,
-                    duration: 600 + Math.random() * 400,
-                    ease: 'Power2',
-                    onComplete: () => particle.destroy()
-                });
-            }
-
-            // Fade out and shrink the wall
-            this.tweens.add({
-                targets: wall.sprite,
-                alpha: 0,
-                scaleX: 0,
-                scaleY: 0,
-                duration: 500,
-                ease: 'Back.in',
-                onComplete: () => {
-                    wall.sprite.setVisible(false);
-                }
-            });
-
-            // Remove from physics collision
-            this.gridPhysics.removeSpecialWall(wall);
+            this.unlockSpecialWall(wall);
         });
 
-        // Play a sound effect or show notification
-        console.log('[Game] Special walls unlocked!');
+        console.log('[Game] All special walls unlocked!');
     }
 
     /**
@@ -587,6 +609,20 @@ export class Game extends Phaser.Scene {
         // Track last input time to prevent rapid movement
         this.lastInputTime = 0;
         this.inputDelay = 150; // ms between inputs
+
+        // DEBUG: Press Q to jump to level 1, W to jump to level 2, E to jump to level 3
+        this.input.keyboard.on('keydown-Q', () => {
+            console.log('[DEBUG] Jumping to Level 1');
+            this.scene.restart({ levelIndex: 1 });
+        });
+        this.input.keyboard.on('keydown-W', () => {
+            console.log('[DEBUG] Jumping to Level 2');
+            this.scene.restart({ levelIndex: 2 });
+        });
+        this.input.keyboard.on('keydown-E', () => {
+            console.log('[DEBUG] Jumping to Level 3');
+            this.scene.restart({ levelIndex: 3 });
+        });
     }
 
     /**
@@ -911,15 +947,39 @@ export class Game extends Phaser.Scene {
     handleGateCollision(gate) {
         if (!gate || gate.isOpen) return;
 
-        // Get appropriate riddle based on gate type
+        console.log(`[Game] Gate collision: id=${gate.id}, type=${gate.type}, riddleId=${gate.riddleId}, ruleEffect=`, gate.ruleEffect);
+
+        // Get appropriate riddle based on gate configuration
         let riddle;
-        if (gate.type === 'rule' && gate.ruleEffect) {
-            // Use a rule riddle and attach the gate's effect
-            riddle = this.riddleManager.getRuleRiddle();
+        
+        // Priority 1: Specific riddle ID linked to this gate
+        if (gate.riddleId) {
+            console.log(`[Game] Gate has specific riddleId: ${gate.riddleId}`);
+            riddle = this.riddleManager.getRiddleById(gate.riddleId);
             if (riddle) {
+                console.log(`[Game] Found linked riddle: ${riddle.id}`);
+                // If gate also has a ruleEffect, override the riddle's effect
+                if (gate.ruleEffect) {
+                    riddle = { ...riddle, effect: gate.ruleEffect };
+                }
+            } else {
+                console.warn(`[Game] Riddle '${gate.riddleId}' not found, falling back to random`);
+            }
+        }
+        
+        // Priority 2: Rule gate - find matching riddle by ruleId
+        if (!riddle && gate.type === 'rule' && gate.ruleEffect) {
+            console.log(`[Game] Looking for riddle matching rule: ${gate.ruleEffect.ruleId}`);
+            riddle = this.riddleManager.getRiddleForRule(gate.ruleEffect.ruleId);
+            if (riddle) {
+                console.log(`[Game] Found riddle: ${riddle.id}, question: ${riddle.question.substring(0, 50)}...`);
+                // Override the riddle's effect with the gate's specific effect
                 riddle = { ...riddle, effect: gate.ruleEffect };
             }
-        } else {
+        }
+        
+        // Priority 3: Fallback to random barrier riddle
+        if (!riddle) {
             riddle = this.riddleManager.getBarrierRiddle();
         }
 

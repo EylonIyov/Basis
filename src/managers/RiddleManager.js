@@ -110,6 +110,27 @@ export class RiddleManager {
     }
 
     /**
+     * Get a rule riddle that matches a specific rule ID
+     * @param {string} ruleId - The rule ID to match (e.g., 'IRON_IS_AIR')
+     * @returns {Object|null} A matching riddle or a random rule riddle if no match
+     */
+    getRiddleForRule(ruleId) {
+        // Find a riddle whose effect matches this rule
+        const matchingRiddle = this.ruleRiddles.find(
+            r => r.effect && r.effect.ruleId === ruleId
+        );
+        
+        if (matchingRiddle) {
+            this.usedRiddles.add(matchingRiddle.id);
+            return matchingRiddle;
+        }
+        
+        // Fallback to any rule riddle if no specific match
+        console.warn(`[RiddleManager] No riddle found for rule '${ruleId}', using random rule riddle`);
+        return this.getRuleRiddle();
+    }
+
+    /**
      * Check if an answer is correct for a given riddle
      * @param {Object} riddle - The riddle object
      * @param {number} answerIndex - The index of the selected answer
