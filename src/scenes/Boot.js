@@ -28,6 +28,9 @@ export class Boot extends Phaser.Scene {
         this.load.image('friend_level2', 'assets/Level2Friend.png');
         this.load.image('friend_level3', 'assets/Level3Friend.png');
 
+        // Load Main Menu background
+        this.load.image('main_menu_bg', 'assets/MainMenu.png');
+
         // Display loading text
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -137,7 +140,7 @@ export class Boot extends Phaser.Scene {
         this.cameras.main.fadeOut(300, 0, 0, 0);
         
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start('Game');
+            this.scene.start('MainMenu');
         });
     }
 }

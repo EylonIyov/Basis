@@ -1,4 +1,5 @@
 import { Boot } from './scenes/Boot.js';
+import { MainMenu } from './scenes/MainMenu.js';
 import { Game } from './scenes/Game.js';
 
 const config = {
@@ -14,6 +15,7 @@ const config = {
     antialias: false,
     scene: [
         Boot,
+        MainMenu,
         Game
     ],
     scale: {
