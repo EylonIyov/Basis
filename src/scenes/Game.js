@@ -546,11 +546,15 @@ export class Game extends Phaser.Scene {
     createFriend() {
         if (!this.level.friend) return;
 
+        // Get current level index (1-based for asset naming)
+        const levelIndex = this.levelManager.currentLevelIndex + 1;
+
         this.friend = new Friend(
             this,
             this.level.friend.x,
             this.level.friend.y,
-            this.gridPhysics
+            this.gridPhysics,
+            levelIndex
         );
     }
 

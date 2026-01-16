@@ -13,6 +13,7 @@ export class Boot extends Phaser.Scene {
         // Load video assets
         this.load.video('bg_video_level1', 'assets/background video.mp4', true);
         this.load.video('bg_video_level2', 'assets/video level 2.mp4', true);
+        this.load.video('bg_video_level3', 'assets/Level3Background.mp4', true);
 
         // Load player animation assets
         this.load.image('player_idle', 'assets/idle.png');
@@ -21,6 +22,11 @@ export class Boot extends Phaser.Scene {
         this.load.image('player_moving3', 'assets/moving3.png');
         this.load.image('player_moving4', 'assets/moving4.png');
         this.load.image('player_moving5', 'assets/moving5.png');
+
+        // Load Friend assets for each level
+        this.load.image('friend_level1', 'assets/Level1Friend.png');
+        this.load.image('friend_level2', 'assets/Level2Friend.png');
+        this.load.image('friend_level3', 'assets/Level3Friend.png');
 
         // Display loading text
         const width = this.cameras.main.width;

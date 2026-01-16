@@ -3,11 +3,12 @@
  * Reaching the Friend triggers the level win condition
  */
 export class Friend {
-    constructor(scene, gridX, gridY, gridPhysics) {
+    constructor(scene, gridX, gridY, gridPhysics, levelIndex = 1) {
         this.scene = scene;
         this.gridX = gridX;
         this.gridY = gridY;
         this.gridPhysics = gridPhysics;
+        this.levelIndex = levelIndex;
         
         this.sprite = null;
         
@@ -19,11 +20,22 @@ export class Friend {
      */
     createSprite() {
         const pixelPos = this.getPixelPosition();
+        const size = this.gridPhysics ? this.gridPhysics.tileSize : 32;
 
-        // Try to use generated sprite
-        if (this.scene.textures.exists('friend')) {
+        // Try to use level-specific friend asset first
+        const levelFriendKey = `friend_level${this.levelIndex}`;
+        
+        if (this.scene.textures.exists(levelFriendKey)) {
+            this.sprite = this.scene.add.sprite(pixelPos.x, pixelPos.y, levelFriendKey);
+            this.sprite.setOrigin(0.5);
+            // Scale to fit tile with some padding
+            this.sprite.setDisplaySize(size - 4, size - 4);
+        } 
+        // Fallback to generated sprite
+        else if (this.scene.textures.exists('friend')) {
             this.sprite = this.scene.add.sprite(pixelPos.x, pixelPos.y, 'friend');
             this.sprite.setOrigin(0.5);
+            this.sprite.setDisplaySize(size, size);
             
             // Play idle animation if it exists
             if (this.scene.anims.exists('friend_idle')) {
@@ -208,4 +220,3 @@ export class Friend {
         }
     }
 }
-

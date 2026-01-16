@@ -83,5 +83,6 @@ const gateData = {
 const loader = new LevelLoader();
 export const Level3 = loader.loadFromMatrix(level3Matrix, gateData, {
     name: "Level 3 - Elements",
-    theme: "cave"
+    theme: "cave",
+    backgroundVideo: "bg_video_level3"
 });
