@@ -437,6 +437,57 @@
       }
     },
     {
+      "id": "riddle_emerald_air",
+      "type": "rule",
+      "question": "NATURE'S BREATH: What force causes even the mightiest emerald to dissolve into mist?",
+      "answers": [
+        "The forest's ancient whisper",
+        "A dragon's flame",
+        "Pure darkness",
+        "Frozen silence"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "EMERALD_IS_AIR",
+        "value": true,
+        "description": "EMERALD FADES - The green gems dissolve!"
+      }
+    },
+    {
+      "id": "riddle_diamond_air",
+      "type": "rule",
+      "question": "CRYSTALLINE FRACTURE: Under what condition do diamonds shatter into nothingness?",
+      "answers": [
+        "Perfect resonance frequency",
+        "Gentle warmth",
+        "Soft rain",
+        "Complete stillness"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "DIAMOND_IS_AIR",
+        "value": true,
+        "description": "DIAMOND SHATTERS - Crystals crumble to dust!"
+      }
+    },
+    {
+      "id": "riddle_quartz_air",
+      "type": "rule",
+      "question": "PURE DISSOLUTION: Quartz holds energy until released. What triggers the release?",
+      "answers": [
+        "A focused thought",
+        "Loud thunder",
+        "Heavy weight",
+        "Bright sunlight"
+      ],
+      "correctAnswer": 0,
+      "effect": {
+        "ruleId": "QUARTZ_IS_AIR",
+        "value": true,
+        "description": "QUARTZ RELEASES - Pure energy disperses!"
+      }
+    },
+    {
       "id": "choice_elements",
       "type": "choice",
       "question": "The ancient elements await your command. Which power do you invoke?",
@@ -631,6 +682,72 @@
           "ruleId": "GOLD_TO_LAPIS",
           "value": true,
           "description": "DEEPENING - Gold sinks into Lapis!"
+        }
+      ]
+    },
+    {
+      "id": "choice_forge_steel",
+      "type": "choice",
+      "question": "The master blacksmith tends his eternal forge. What shall be reshaped in the flames?",
+      "answers": [
+        "🪨 Steel crumbles to Iron",
+        "🪵 Wood hardens to Steel",
+        "⚙️ Iron tempers to Steel",
+        "💚 Steel becomes Emerald"
+      ],
+      "effects": [
+        {
+          "ruleId": "STEEL_TO_IRON",
+          "value": true,
+          "description": "DECAY - Steel crumbles back to Iron!"
+        },
+        {
+          "ruleId": "WOOD_TO_STEEL",
+          "value": true,
+          "description": "PETRIFICATION - Wood hardens into Steel!"
+        },
+        {
+          "ruleId": "IRON_TO_STEEL",
+          "value": true,
+          "description": "FORGING - Iron tempers into Steel!"
+        },
+        {
+          "ruleId": "STEEL_TO_EMERALD",
+          "value": true,
+          "description": "TRANSMUTATION - Steel becomes Emerald!"
+        }
+      ]
+    },
+    {
+      "id": "choice_elemental_shift",
+      "type": "choice",
+      "question": "Ancient forces stir beneath your feet. Which elemental shift do you invoke?",
+      "answers": [
+        "⚙️ Iron dissolves to air",
+        "🪵 Wood petrifies to Iron",
+        "💚 Emerald fades to air",
+        "🌳 Iron becomes Wood"
+      ],
+      "effects": [
+        {
+          "ruleId": "IRON_IS_AIR",
+          "value": true,
+          "description": "DISSOLUTION - Iron rusts away to nothing!"
+        },
+        {
+          "ruleId": "WOOD_TO_IRON",
+          "value": true,
+          "description": "PETRIFICATION - Wood hardens into Iron!"
+        },
+        {
+          "ruleId": "EMERALD_IS_AIR",
+          "value": true,
+          "description": "VANISHING - Emerald walls fade to air!"
+        },
+        {
+          "ruleId": "IRON_TO_WOOD",
+          "value": true,
+          "description": "NATURALIZATION - Iron becomes living Wood!"
         }
       ]
     }

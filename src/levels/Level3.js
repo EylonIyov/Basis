@@ -31,51 +31,69 @@ const level3Matrix = [
 
 // Gate metadata - each gate uses a different wall type rule
 const gateData = {
-    // === TRANSFORMATION CHOICE RIDDLES (test all 7 transforms) ===
+    // === NEW CHOICE RIDDLES (shuffled answers) ===
     '8,1': {
-        id: 'gate_transform_metal',
+        id: 'gate_forge_steel',
         path: 'top_left',
         type: 'choice',
-        riddleId: 'choice_transform_metal'  // Steel→Emerald, Iron→Steel, Steel→Iron, Wood→Iron
+        riddleId: 'choice_forge_steel'  // Steel→Iron, Wood→Steel, Iron→Steel, Steel→Emerald
     },
     '15,1': {
-        id: 'gate_transform_gems',
+        id: 'gate_elemental_shift',
         path: 'top_right',
         type: 'choice',
-        riddleId: 'choice_transform_gems'   // Lapis→Diamond, Gold→Lapis, Steel→Emerald, Iron→Steel
+        riddleId: 'choice_elemental_shift'  // Iron→Air, Wood→Iron, Emerald→Air, Iron→Wood
     },
+    // === OTHER TRANSFORMATION RIDDLES ===
     '1,8': {
-        id: 'gate_transform_nature',
+        id: 'gate_lapis_to_diamond',
         path: 'left_side',
-        type: 'choice',
-        riddleId: 'choice_transform_nature' // Iron→Wood, Wood→Iron, Steel→Iron, Gold→Lapis
+        type: 'rule',
+        ruleEffect: {
+            ruleId: 'LAPIS_TO_DIAMOND',
+            value: true,
+            description: 'Lapis becomes Diamond!'
+        }
     },
-    // === RULE RIDDLES ===
     '9,8': {
-        id: 'gate_steel',
+        id: 'gate_gold_to_lapis',
         path: 'center',
         type: 'rule',
         ruleEffect: {
-            ruleId: 'STEEL_IS_AIR',
+            ruleId: 'GOLD_TO_LAPIS',
             value: true,
-            description: 'Steel plates melt away!'
+            description: 'Gold becomes Lapis!'
         }
     },
     '14,8': {
-        id: 'gate_quartz',
+        id: 'riddle_diamond_air',
         path: 'right_center',
-        type: 'choice',
-        riddleId: 'choice_gems'  // For testing gem walls
+        type: 'rule',
+        ruleEffect: {
+            ruleId: 'DIAMOND_IS_AIR',
+            value: true,
+            description: 'Diamond becomes Air!'
+        }
     },
     '18,8': {
-        id: 'gate_exit',
-        path: 'far_right'
-        // Standard barrier riddle
+        id: 'riddle_emerald_air',
+        path: 'far_right',
+        type: 'rule',
+        ruleEffect: {
+            ruleId: 'EMERALD_IS_AIR',
+            value: true,
+            description: 'Emerald becomes Air!'
+        }
     },
     '10,10': {
-        id: 'gate_lapis',
-        path: 'bottom_center'
-        // Standard barrier riddle
+        id: 'riddle_quartz_air',
+        path: 'bottom_center',
+        type: 'rule',
+        ruleEffect: {
+            ruleId: 'QUARTZ_IS_AIR',
+            value: true,
+            description: 'Quartz becomes Air!'
+        }
     }
 };
 

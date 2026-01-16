@@ -233,7 +233,7 @@ export class UIManager {
 
         // Modal box
         const modalWidth = 320;
-        const modalHeight = 350; // Increased height for Exit button
+        const modalHeight = 280;
         const modalX = width / 2;
         const modalY = height / 2;
 
@@ -242,7 +242,7 @@ export class UIManager {
         this.pauseContainer.add(modalBg);
 
         // Title
-        const title = this.scene.add.text(modalX, modalY - 110, 'PAUSED', {
+        const title = this.scene.add.text(modalX, modalY - 90, 'PAUSED', {
             fontSize: '36px',
             fontFamily: 'monospace',
             color: '#F1C40F',
@@ -251,12 +251,12 @@ export class UIManager {
         this.pauseContainer.add(title);
 
         // Continue button
-        const continueBtn = this.scene.add.rectangle(modalX, modalY - 30, 200, 50, 0x2ECC71);
+        const continueBtn = this.scene.add.rectangle(modalX, modalY - 10, 200, 50, 0x2ECC71);
         continueBtn.setStrokeStyle(2, 0x27AE60);
         continueBtn.setInteractive({ useHandCursor: true });
         this.pauseContainer.add(continueBtn);
 
-        const continueText = this.scene.add.text(modalX, modalY - 30, 'CONTINUE', {
+        const continueText = this.scene.add.text(modalX, modalY - 10, 'CONTINUE', {
             fontSize: '20px',
             fontFamily: 'monospace',
             color: '#FFFFFF',
@@ -280,12 +280,12 @@ export class UIManager {
         });
 
         // Restart button
-        const restartBtn = this.scene.add.rectangle(modalX, modalY + 40, 200, 50, 0xE74C3C);
+        const restartBtn = this.scene.add.rectangle(modalX, modalY + 60, 200, 50, 0xE74C3C);
         restartBtn.setStrokeStyle(2, 0xC0392B);
         restartBtn.setInteractive({ useHandCursor: true });
         this.pauseContainer.add(restartBtn);
 
-        const restartText = this.scene.add.text(modalX, modalY + 40, 'RESTART', {
+        const restartText = this.scene.add.text(modalX, modalY + 60, 'RESTART', {
             fontSize: '20px',
             fontFamily: 'monospace',
             color: '#FFFFFF',
@@ -311,41 +311,8 @@ export class UIManager {
             }
         });
 
-        // Exit to Menu button
-        const exitBtn = this.scene.add.rectangle(modalX, modalY + 110, 200, 50, 0x95A5A6);
-        exitBtn.setStrokeStyle(2, 0x7F8C8D);
-        exitBtn.setInteractive({ useHandCursor: true });
-        this.pauseContainer.add(exitBtn);
-
-        const exitText = this.scene.add.text(modalX, modalY + 110, 'EXIT TO MENU', {
-            fontSize: '18px',
-            fontFamily: 'monospace',
-            color: '#FFFFFF',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.pauseContainer.add(exitText);
-
-        // Exit button hover effects
-        exitBtn.on('pointerover', () => {
-            exitBtn.setFillStyle(0x7F8C8D);
-            exitBtn.setScale(1.05);
-            exitText.setScale(1.05);
-        });
-        exitBtn.on('pointerout', () => {
-            exitBtn.setFillStyle(0x95A5A6);
-            exitBtn.setScale(1);
-            exitText.setScale(1);
-        });
-        exitBtn.on('pointerdown', () => {
-            // Fade out and go to menu
-            this.scene.cameras.main.fadeOut(300, 0, 0, 0);
-            this.scene.cameras.main.once('camerafadeoutcomplete', () => {
-                this.scene.scene.start('MainMenu');
-            });
-        });
-
         // Hint text
-        const hintText = this.scene.add.text(modalX, modalY + 155, 'Press ESC to continue', {
+        const hintText = this.scene.add.text(modalX, modalY + 120, 'Press ESC to continue', {
             fontSize: '12px',
             fontFamily: 'monospace',
             color: '#7F8C8D'

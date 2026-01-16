@@ -26,6 +26,7 @@ export class RuleManager extends Phaser.Events.EventEmitter {
             'IRON_TO_STEEL': false,     // Iron walls transform into steel
             'STEEL_TO_IRON': false,     // Steel walls transform into iron
             'WOOD_TO_IRON': false,      // Wood walls transform into iron
+            'WOOD_TO_STEEL': false,     // Wood walls transform into steel
             'IRON_TO_WOOD': false,      // Iron walls transform into wood
             'LAPIS_TO_DIAMOND': false,  // Lapis walls transform into diamond
             'GOLD_TO_LAPIS': false,     // Gold walls transform into lapis
@@ -245,6 +246,7 @@ export class RuleManager extends Phaser.Events.EventEmitter {
             'IRON_TO_STEEL': false,
             'STEEL_TO_IRON': false,
             'WOOD_TO_IRON': false,
+            'WOOD_TO_STEEL': false,
             'IRON_TO_WOOD': false,
             'LAPIS_TO_DIAMOND': false,
             'GOLD_TO_LAPIS': false,
