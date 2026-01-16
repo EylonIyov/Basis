@@ -31,6 +31,9 @@ export class Boot extends Phaser.Scene {
         // Load Main Menu background
         this.load.image('main_menu_bg', 'assets/MainMenu.png');
 
+        // Load special wall textures
+        this.load.image('wall_ladder', 'assets/ladder.png');
+
         // Display loading text
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;

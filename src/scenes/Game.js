@@ -232,13 +232,29 @@ export class Game extends Phaser.Scene {
         this.level.walls.forEach(wallData => {
             const pixelPos = this.gridPhysics.gridToPixel(wallData.x, wallData.y);
             const wallType = wallData.type || 'brick';
-            const textureKey = `wall_${wallType}`;
+            let textureKey = `wall_${wallType}`;
+
+            // Check if this is the wall at (1, 0) OR below the friend
+            // If so, use the ladder texture
+            const isLadderPos1 = wallData.x === 1 && wallData.y === 0;
+            const isBelowFriend = this.level.friend && wallData.x === this.level.friend.x && wallData.y === this.level.friend.y + 1;
+
+            if (isLadderPos1 || isBelowFriend) {
+                if (this.textures.exists('wall_ladder')) {
+                    textureKey = 'wall_ladder';
+                }
+            }
 
             let sprite;
             if (this.textures.exists(textureKey)) {
-                // Use specific texture for this wall type
+                // Use specific texture for this wall type (or ladder override)
                 sprite = this.add.image(pixelPos.x, pixelPos.y, textureKey);
-                sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+                
+                if (textureKey === 'wall_ladder') {
+                    sprite.setDisplaySize(this.tileSize * 2, this.tileSize * 2);
+                } else {
+                    sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+                }
             } else if (wallType === 'brick' && this.textures.exists('wall')) {
                 // Only use generic 'wall' texture for brick type
                 sprite = this.add.image(pixelPos.x, pixelPos.y, 'wall');
