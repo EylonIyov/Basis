@@ -15,6 +15,16 @@ export class UIManager {
         this.currentRiddle = null;
         this.pendingRuleEffect = null;  // Store effect to apply after modal closes
         
+        // Life system
+        this.maxLives = 3;
+        this.currentLives = 3;
+        
+        // Timer system
+        this.maxTime = 60; // 60 seconds
+        this.currentTime = 60;
+        this.timerEvent = null;
+        this.timerRunning = false;
+        
         // UI elements
         this.modalContainer = null;
         this.pauseContainer = null;
@@ -122,7 +132,7 @@ export class UIManager {
         const width = this.scene.cameras.main.width;
         
         this.hudContainer = this.scene.add.container(10, 10);
-        this.hudContainer.setDepth(50);
+        this.hudContainer.setDepth(1000);
         this.hudContainer.setScrollFactor(0); // Fixed position
 
         // Level name
@@ -134,8 +144,28 @@ export class UIManager {
         });
         this.hudContainer.add(this.levelText);
 
+        // Lives display
+        this.livesText = this.scene.add.text(0, 24, '', {
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            color: '#E74C3C',
+            fontStyle: 'bold'
+        });
+        this.hudContainer.add(this.livesText);
+        this.updateLivesDisplay();
+
+        // Timer display
+        this.timerText = this.scene.add.text(0, 48, '', {
+            fontSize: '16px',
+            fontFamily: 'monospace',
+            color: '#3498DB',
+            fontStyle: 'bold'
+        });
+        this.hudContainer.add(this.timerText);
+        this.updateTimerDisplay();
+
         // Active rules display (initially empty)
-        this.activeRulesText = this.scene.add.text(0, 24, '', {
+        this.activeRulesText = this.scene.add.text(0, 72, '', {
             fontSize: '12px',
             fontFamily: 'monospace',
             color: '#3498DB'
@@ -209,6 +239,130 @@ export class UIManager {
             align: 'center'
         }).setOrigin(0.5);
         this.ruleEffectContainer.add(this.ruleEffectText);
+    }
+
+    /**
+     * Lose a life
+     */
+    loseLife() {
+        this.currentLives = Math.max(0, this.currentLives - 1);
+        this.updateLivesDisplay();
+        
+        // Flash animation on lives text
+        this.scene.tweens.add({
+            targets: this.livesText,
+            scale: 1.3,
+            duration: 100,
+            yoyo: true,
+            ease: 'Power2'
+        });
+    }
+
+    /**
+     * Update lives display
+     */
+    updateLivesDisplay() {
+        const hearts = '♥'.repeat(this.currentLives) + '♡'.repeat(this.maxLives - this.currentLives);
+        this.livesText.setText(`Lives: ${hearts}`);
+        
+        // Change color based on remaining lives
+        if (this.currentLives <= 1) {
+            this.livesText.setColor('#E74C3C'); // Red
+        } else if (this.currentLives <= 2) {
+            this.livesText.setColor('#E67E22'); // Orange
+        } else {
+            this.livesText.setColor('#2ECC71'); // Green
+        }
+    }
+
+    /**
+     * Reset lives to maximum
+     */
+    resetLives() {
+        this.currentLives = this.maxLives;
+        this.updateLivesDisplay();
+    }
+
+    /**
+     * Start the level timer
+     */
+    startTimer() {
+        this.currentTime = this.maxTime;
+        this.timerRunning = true;
+        this.updateTimerDisplay();
+        
+        // Create timer event that triggers every second
+        this.timerEvent = this.scene.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+    }
+
+    /**
+     * Update timer countdown
+     */
+    updateTimer() {
+        if (!this.timerRunning) return;
+        
+        this.currentTime--;
+        this.updateTimerDisplay();
+        
+        // Check if time's up
+        if (this.currentTime <= 0) {
+            this.stopTimer();
+            this.showTimesUpModal();
+        }
+    }
+
+    /**
+     * Stop the timer
+     */
+    stopTimer() {
+        this.timerRunning = false;
+        if (this.timerEvent) {
+            this.timerEvent.remove();
+            this.timerEvent = null;
+        }
+    }
+
+    /**
+     * Update timer display
+     */
+    updateTimerDisplay() {
+        const minutes = Math.floor(this.currentTime / 60);
+        const seconds = this.currentTime % 60;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        this.timerText.setText(`Time: ${timeString}`);
+        
+        // Change color based on remaining time
+        if (this.currentTime <= 10) {
+            this.timerText.setColor('#E74C3C'); // Red
+            // Flash effect when low on time
+            if (this.currentTime <= 10 && this.currentTime > 0) {
+                this.scene.tweens.add({
+                    targets: this.timerText,
+                    scale: 1.2,
+                    duration: 200,
+                    yoyo: true,
+                    ease: 'Power2'
+                });
+            }
+        } else if (this.currentTime <= 20) {
+            this.timerText.setColor('#E67E22'); // Orange
+        } else {
+            this.timerText.setColor('#3498DB'); // Blue
+        }
+    }
+
+    /**
+     * Reset timer to maximum
+     */
+    resetTimer() {
+        this.stopTimer();
+        this.currentTime = this.maxTime;
+        this.updateTimerDisplay();
     }
 
     /**
@@ -321,6 +475,302 @@ export class UIManager {
     }
 
     /**
+     * Create game over modal (initially not created, created on demand)
+     */
+    createGameOverModal() {
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+
+        this.gameOverContainer = this.scene.add.container(0, 0);
+        this.gameOverContainer.setVisible(false);
+        this.gameOverContainer.setDepth(200);
+
+        // Dark overlay
+        const overlay = this.scene.add.rectangle(
+            width / 2, height / 2,
+            width, height,
+            0x000000, 0.9
+        );
+        overlay.setInteractive(); // Block clicks through
+        this.gameOverContainer.add(overlay);
+
+        // Modal box
+        const modalWidth = 360;
+        const modalHeight = 320;
+        const modalX = width / 2;
+        const modalY = height / 2;
+
+        const modalBg = this.scene.add.rectangle(modalX, modalY, modalWidth, modalHeight, 0x1A1A2E);
+        modalBg.setStrokeStyle(3, 0xE74C3C);
+        this.gameOverContainer.add(modalBg);
+
+        // Title
+        const title = this.scene.add.text(modalX, modalY - 100, 'GAME OVER', {
+            fontSize: '42px',
+            fontFamily: 'monospace',
+            color: '#E74C3C',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.gameOverContainer.add(title);
+
+        // Subtitle
+        const subtitle = this.scene.add.text(modalX, modalY - 50, 'You ran out of lives!', {
+            fontSize: '16px',
+            fontFamily: 'monospace',
+            color: '#ECF0F1'
+        }).setOrigin(0.5);
+        this.gameOverContainer.add(subtitle);
+
+        // Retry button
+        const retryBtn = this.scene.add.rectangle(modalX, modalY + 20, 220, 50, 0xE67E22);
+        retryBtn.setStrokeStyle(2, 0xD35400);
+        retryBtn.setInteractive({ useHandCursor: true });
+        this.gameOverContainer.add(retryBtn);
+
+        const retryText = this.scene.add.text(modalX, modalY + 20, 'RETRY LEVEL', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.gameOverContainer.add(retryText);
+
+        // Retry button hover effects
+        retryBtn.on('pointerover', () => {
+            retryBtn.setFillStyle(0xD35400);
+            retryBtn.setScale(1.05);
+            retryText.setScale(1.05);
+        });
+        retryBtn.on('pointerout', () => {
+            retryBtn.setFillStyle(0xE67E22);
+            retryBtn.setScale(1);
+            retryText.setScale(1);
+        });
+        retryBtn.on('pointerdown', () => {
+            this.hideGameOverModal();
+            if (this.onRestart) {
+                this.onRestart();
+            }
+        });
+
+        // Main Menu button
+        const menuBtn = this.scene.add.rectangle(modalX, modalY + 85, 220, 50, 0x34495E);
+        menuBtn.setStrokeStyle(2, 0x2C3E50);
+        menuBtn.setInteractive({ useHandCursor: true });
+        this.gameOverContainer.add(menuBtn);
+
+        const menuText = this.scene.add.text(modalX, modalY + 85, 'MAIN MENU', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.gameOverContainer.add(menuText);
+
+        // Menu button hover effects
+        menuBtn.on('pointerover', () => {
+            menuBtn.setFillStyle(0x2C3E50);
+            menuBtn.setScale(1.05);
+            menuText.setScale(1.05);
+        });
+        menuBtn.on('pointerout', () => {
+            menuBtn.setFillStyle(0x34495E);
+            menuBtn.setScale(1);
+            menuText.setScale(1);
+        });
+        menuBtn.on('pointerdown', () => {
+            this.hideGameOverModal();
+            this.scene.scene.start('Main');
+        });
+    }
+
+    /**
+     * Show the game over modal
+     */
+    showGameOverModal() {
+        // Create modal if it doesn't exist
+        if (!this.gameOverContainer) {
+            this.createGameOverModal();
+        }
+
+        this.gameOverContainer.setVisible(true);
+        this.gameOverContainer.setAlpha(0);
+
+        // Animate in
+        this.scene.tweens.add({
+            targets: this.gameOverContainer,
+            alpha: 1,
+            duration: 300,
+            ease: 'Power2'
+        });
+    }
+
+    /**
+     * Hide the game over modal
+     */
+    hideGameOverModal() {
+        if (!this.gameOverContainer) return;
+
+        this.scene.tweens.add({
+            targets: this.gameOverContainer,
+            alpha: 0,
+            duration: 200,
+            ease: 'Power2',
+            onComplete: () => {
+                this.gameOverContainer.setVisible(false);
+            }
+        });
+    }
+
+    /**
+     * Create time's up modal (initially not created, created on demand)
+     */
+    createTimesUpModal() {
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+
+        this.timesUpContainer = this.scene.add.container(0, 0);
+        this.timesUpContainer.setVisible(false);
+        this.timesUpContainer.setDepth(200);
+
+        // Dark overlay
+        const overlay = this.scene.add.rectangle(
+            width / 2, height / 2,
+            width, height,
+            0x000000, 0.9
+        );
+        overlay.setInteractive(); // Block clicks through
+        this.timesUpContainer.add(overlay);
+
+        // Modal box
+        const modalWidth = 360;
+        const modalHeight = 320;
+        const modalX = width / 2;
+        const modalY = height / 2;
+
+        const modalBg = this.scene.add.rectangle(modalX, modalY, modalWidth, modalHeight, 0x1A1A2E);
+        modalBg.setStrokeStyle(3, 0xE67E22);
+        this.timesUpContainer.add(modalBg);
+
+        // Title
+        const title = this.scene.add.text(modalX, modalY - 100, "TIME'S UP!", {
+            fontSize: '42px',
+            fontFamily: 'monospace',
+            color: '#E67E22',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.timesUpContainer.add(title);
+
+        // Subtitle
+        const subtitle = this.scene.add.text(modalX, modalY - 50, 'You ran out of time!', {
+            fontSize: '16px',
+            fontFamily: 'monospace',
+            color: '#ECF0F1'
+        }).setOrigin(0.5);
+        this.timesUpContainer.add(subtitle);
+
+        // Retry button
+        const retryBtn = this.scene.add.rectangle(modalX, modalY + 20, 220, 50, 0x3498DB);
+        retryBtn.setStrokeStyle(2, 0x2980B9);
+        retryBtn.setInteractive({ useHandCursor: true });
+        this.timesUpContainer.add(retryBtn);
+
+        const retryText = this.scene.add.text(modalX, modalY + 20, 'RETRY LEVEL', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.timesUpContainer.add(retryText);
+
+        // Retry button hover effects
+        retryBtn.on('pointerover', () => {
+            retryBtn.setFillStyle(0x2980B9);
+            retryBtn.setScale(1.05);
+            retryText.setScale(1.05);
+        });
+        retryBtn.on('pointerout', () => {
+            retryBtn.setFillStyle(0x3498DB);
+            retryBtn.setScale(1);
+            retryText.setScale(1);
+        });
+        retryBtn.on('pointerdown', () => {
+            this.hideTimesUpModal();
+            if (this.onRestart) {
+                this.onRestart();
+            }
+        });
+
+        // Main Menu button
+        const menuBtn = this.scene.add.rectangle(modalX, modalY + 85, 220, 50, 0x34495E);
+        menuBtn.setStrokeStyle(2, 0x2C3E50);
+        menuBtn.setInteractive({ useHandCursor: true });
+        this.timesUpContainer.add(menuBtn);
+
+        const menuText = this.scene.add.text(modalX, modalY + 85, 'MAIN MENU', {
+            fontSize: '20px',
+            fontFamily: 'monospace',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.timesUpContainer.add(menuText);
+
+        // Menu button hover effects
+        menuBtn.on('pointerover', () => {
+            menuBtn.setFillStyle(0x2C3E50);
+            menuBtn.setScale(1.05);
+            menuText.setScale(1.05);
+        });
+        menuBtn.on('pointerout', () => {
+            menuBtn.setFillStyle(0x34495E);
+            menuBtn.setScale(1);
+            menuText.setScale(1);
+        });
+        menuBtn.on('pointerdown', () => {
+            this.hideTimesUpModal();
+            this.scene.scene.start('Main');
+        });
+    }
+
+    /**
+     * Show the time's up modal
+     */
+    showTimesUpModal() {
+        // Create modal if it doesn't exist
+        if (!this.timesUpContainer) {
+            this.createTimesUpModal();
+        }
+
+        this.timesUpContainer.setVisible(true);
+        this.timesUpContainer.setAlpha(0);
+
+        // Animate in
+        this.scene.tweens.add({
+            targets: this.timesUpContainer,
+            alpha: 1,
+            duration: 300,
+            ease: 'Power2'
+        });
+    }
+
+    /**
+     * Hide the time's up modal
+     */
+    hideTimesUpModal() {
+        if (!this.timesUpContainer) return;
+
+        this.scene.tweens.add({
+            targets: this.timesUpContainer,
+            alpha: 0,
+            duration: 200,
+            ease: 'Power2',
+            onComplete: () => {
+                this.timesUpContainer.setVisible(false);
+            }
+        });
+    }
+
+    /**
      * Show the pause menu
      */
     showPauseMenu() {
@@ -329,6 +779,11 @@ export class UIManager {
         this.isPaused = true;
         this.pauseContainer.setVisible(true);
         this.pauseContainer.setAlpha(0);
+        
+        // Pause the timer
+        if (this.timerEvent) {
+            this.timerEvent.paused = true;
+        }
 
         // Animate in
         this.scene.tweens.add({
@@ -343,6 +798,11 @@ export class UIManager {
      * Hide the pause menu
      */
     hidePauseMenu() {
+        // Resume the timer
+        if (this.timerEvent) {
+            this.timerEvent.paused = false;
+        }
+        
         // Animate out - keep isPaused true until animation completes
         this.scene.tweens.add({
             targets: this.pauseContainer,
@@ -368,6 +828,11 @@ export class UIManager {
         
         this.currentGate = gate;
         this.isModalOpen = true;
+        
+        // Pause the timer
+        if (this.timerEvent) {
+            this.timerEvent.paused = true;
+        }
 
         // Use already-set riddle if available (set by Game.handleGateCollision for rule gates)
         // Otherwise fall back to a random riddle
@@ -595,21 +1060,38 @@ export class UIManager {
             buttonInfo.rect.setStrokeStyle(2, 0xC0392B);
             buttonInfo.rect.setAlpha(1);
 
-            this.feedbackText.setText('✗ Try again!');
+            // Highlight the correct answer
+            const correctButton = this.answerButtons.find(btn => btn.isCorrect);
+            if (correctButton) {
+                correctButton.rect.setFillStyle(0x2ECC71);
+                correctButton.rect.setStrokeStyle(2, 0x27AE60);
+                correctButton.rect.setAlpha(1);
+            }
+
+            this.feedbackText.setText('✗ Wrong! Correct answer shown in green');
             this.feedbackText.setColor('#E74C3C');
             this.feedbackText.setVisible(true);
 
-            // Re-enable buttons after delay
-            this.scene.time.delayedCall(1200, () => {
-                this.answerButtons.forEach(btn => {
-                    btn.rect.setInteractive({ useHandCursor: true });
-                    btn.rect.setAlpha(1);
-                    if (!btn.isCorrect) {
-                        btn.rect.setFillStyle(0x3498DB);
-                        btn.rect.setStrokeStyle(2, 0x2980B9);
-                    }
+            // Lose a life
+            this.loseLife();
+
+            // Check if game over
+            if (this.currentLives <= 0) {
+                this.scene.time.delayedCall(2000, () => {
+                    this.hideModal(false);
+                    this.showGameOverModal();
                 });
-                this.feedbackText.setVisible(false);
+                return;
+            }
+
+            // Store rule effect to apply AFTER modal closes (if rule riddle)
+            if (this.currentRiddle.type === 'rule' && this.currentRiddle.effect) {
+                this.pendingRuleEffect = this.currentRiddle.effect;
+            }
+
+            // Treat as solved - close modal and open gate after showing correct answer
+            this.scene.time.delayedCall(2500, () => {
+                this.hideModal(true);
             });
         }
     }
@@ -664,6 +1146,11 @@ export class UIManager {
     hideModal(answeredCorrectly = false) {
         // Keep modal state as "open" until animation completes
         // This prevents input from being processed during the close animation
+        
+        // Resume the timer
+        if (this.timerEvent) {
+            this.timerEvent.paused = false;
+        }
         
         // Clean up ESC key listener if it exists
         if (this.escKey) {
@@ -777,6 +1264,16 @@ export class UIManager {
         }).setOrigin(0.5);
         winContainer.add(winText);
 
+        // Add celebration animation to win text
+        this.scene.tweens.add({
+            targets: winText,
+            scale: 1.2,
+            duration: 300,
+            yoyo: true,
+            repeat: 2,
+            ease: 'Back.out'
+        });
+
         // Level name
         const levelText = this.scene.add.text(width / 2, height / 2 + 20, levelName, {
             fontSize: '24px',
@@ -785,22 +1282,26 @@ export class UIManager {
         }).setOrigin(0.5);
         winContainer.add(levelText);
 
-        // Instructions - different text for last level
-        let instructions;
-        if (isLastLevel) {
-            instructions = 'Congratulations! Press R to play again from Level 1';
-        } else if (hasNextLevel) {
-            instructions = 'Press N for next level | Press R to restart';
-        } else {
-            instructions = 'Press R to restart';
-        }
-
-        const instructionText = this.scene.add.text(width / 2, height / 2 + 80, instructions, {
+        // Instructions - auto-continue message
+        const instructionText = this.scene.add.text(width / 2, height / 2 + 80, 'Continuing in 3 seconds...', {
             fontSize: '18px',
             fontFamily: 'monospace',
             color: '#ECF0F1'
         }).setOrigin(0.5);
         winContainer.add(instructionText);
+
+        // Add countdown animation
+        let countdown = 3;
+        const countdownInterval = this.scene.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                countdown--;
+                if (countdown > 0) {
+                    instructionText.setText(`Continuing in ${countdown} seconds...`);
+                }
+            },
+            repeat: 2
+        });
 
         // Animate in
         winContainer.setAlpha(0);
@@ -811,17 +1312,47 @@ export class UIManager {
             ease: 'Power2'
         });
 
-        // Re-enable keyboard for win screen input
+        // Auto-transition after 3 seconds
+        this.scene.time.delayedCall(3000, () => {
+            // Animate out
+            this.scene.tweens.add({
+                targets: winContainer,
+                alpha: 0,
+                duration: 300,
+                ease: 'Power2',
+                onComplete: () => {
+                    winContainer.destroy();
+                    
+                    // Proceed to next level or show appropriate screen
+                    if (isLastLevel) {
+                        // Game complete - go back to main menu
+                        if (callbacks.onRestart) callbacks.onRestart();
+                    } else if (hasNextLevel) {
+                        // Go to next level
+                        if (callbacks.onNextLevel) callbacks.onNextLevel();
+                    } else {
+                        // Restart current level
+                        if (callbacks.onRestart) callbacks.onRestart();
+                    }
+                }
+            });
+        });
+
+        // Re-enable keyboard for win screen input (optional, for manual override)
         this.scene.input.keyboard.enabled = true;
 
-        // Key handlers
+        // Allow manual continuation with N or R keys
         if (hasNextLevel) {
             this.scene.input.keyboard.once('keydown-N', () => {
+                countdownInterval.remove();
+                winContainer.destroy();
                 if (callbacks.onNextLevel) callbacks.onNextLevel();
             });
         }
 
         this.scene.input.keyboard.once('keydown-R', () => {
+            countdownInterval.remove();
+            winContainer.destroy();
             if (callbacks.onRestart) callbacks.onRestart();
         });
     }

@@ -604,6 +604,9 @@ export class Game extends Phaser.Scene {
         this.uiManager.onRestart = () => {
             this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
         };
+        
+        // Start the level timer
+        this.uiManager.startTimer();
     }
 
     /**
@@ -1246,6 +1249,9 @@ export class Game extends Phaser.Scene {
         // Prevent multiple calls
         if (this.hasWon) return;
         this.hasWon = true;
+
+        // Stop the timer
+        this.uiManager.stopTimer();
 
         // Disable input
         this.input.keyboard.enabled = false;

@@ -7,17 +7,20 @@ export class MainMenu extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // Add background image
-        const bg = this.add.image(width / 2, height / 2, 'main_menu_bg');
-        
-        // Force background to fit exact screen dimensions
-        bg.setDisplaySize(width, height);
+        // Fallback solid background
+        this.add.rectangle(width / 2, height / 2, width, height, 0x1A1A2E);
+
+        // Try to display background image if loaded
+        if (this.textures.exists('main_menu_bg')) {
+            const bg = this.add.image(width / 2, height / 2, 'main_menu_bg');
+            bg.setDisplaySize(width, height);
+        }
 
         // Create "START GAME" button container
         const buttonWidth = 300;
         const buttonHeight = 80;
         const buttonX = width / 2;
-        const buttonY = height / 2;
+        const buttonY = height / 2 + 50;
 
         const buttonContainer = this.add.container(buttonX, buttonY);
 
