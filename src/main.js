@@ -33,3 +33,28 @@ const config = {
 }
 
 new Phaser.Game(config);
+
+// Global error overlay: show runtime errors on-screen for easier debugging
+window.addEventListener('error', (e) => {
+    try {
+        const existing = document.getElementById('phaser-error-overlay');
+        if (existing) return;
+        const overlay = document.createElement('div');
+        overlay.id = 'phaser-error-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.left = '10px';
+        overlay.style.top = '10px';
+        overlay.style.zIndex = '99999';
+        overlay.style.maxWidth = '95%';
+        overlay.style.padding = '10px';
+        overlay.style.background = 'rgba(0,0,0,0.8)';
+        overlay.style.color = 'white';
+        overlay.style.fontFamily = 'monospace';
+        overlay.style.fontSize = '12px';
+        overlay.style.border = '2px solid #ff4d4f';
+        overlay.innerText = 'Runtime Error: ' + (e && e.message ? e.message : String(e));
+        document.body.appendChild(overlay);
+    } catch (err) {
+        console.error('Failed to show error overlay', err);
+    }
+});

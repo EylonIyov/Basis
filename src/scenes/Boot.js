@@ -21,7 +21,6 @@ export class Boot extends Phaser.Scene {
         this.load.image('player_idle', 'assets/idle.png');
         this.load.image('player_moving1', 'assets/moving1.png');
         this.load.image('player_moving2', 'assets/moving2.png');
-        this.load.image('player_moving3', 'assets/moving3.png');
         this.load.image('player_moving4', 'assets/moving4.png');
         this.load.image('player_moving5', 'assets/moving5.png');
 
@@ -75,6 +74,8 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
         // Create player animations
         this.createPlayerAnimations();
 
@@ -103,7 +104,16 @@ export class Boot extends Phaser.Scene {
                         
                         // Transition to game after a short delay
                         this.time.delayedCall(500, () => {
-                            this.startGame();
+                                            // Debug: show that Boot completed and is about to start MainMenu
+                                            const dbg = this.add.text(width / 2, height / 2 + 140, 'Boot complete - starting MainMenu...', {
+                                                fontSize: '14px',
+                                                fontFamily: 'monospace',
+                                                color: '#ffffff'
+                                            }).setOrigin(0.5);
+                                            this.time.delayedCall(400, () => {
+                                                dbg.destroy();
+                                                this.startGame();
+                                            });
                         });
                     });
                 });
@@ -120,14 +130,14 @@ export class Boot extends Phaser.Scene {
             repeat: -1
         });
 
-        // Create movement animation using moving1-5
+        // Create movement animation using moving1-2,4-5
         this.anims.create({
             key: 'player_move',
             frames: [
                 { key: 'player_moving1' },
                 { key: 'player_moving2' },
-                { key: 'player_moving3' },
                 { key: 'player_moving4' },
+                { key: 'player_moving5' },
                 { key: 'player_moving5' }
             ],
             frameRate: 10,
