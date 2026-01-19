@@ -88,7 +88,7 @@ export class MainMenu extends Phaser.Scene {
     startGame() {
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start('Game');
+            this.scene.start('IntroVideo');
         });
     }
 }

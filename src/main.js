@@ -1,5 +1,6 @@
 import { Boot } from './scenes/Boot.js';
 import { MainMenu } from './scenes/MainMenu.js';
+import { IntroVideo } from './scenes/IntroVideo.js';
 import { Game } from './scenes/Game.js';
 
 const config = {
@@ -16,6 +17,7 @@ const config = {
     scene: [
         Boot,
         MainMenu,
+        IntroVideo,
         Game
     ],
     scale: {
