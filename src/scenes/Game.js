@@ -1399,6 +1399,9 @@ export class Game extends Phaser.Scene {
         if (videoKey === 'level1_evil_friend') {
             audio = this.sound.add('sfx_evil_friend');
             audio.play();
+        } else if (videoKey === 'level2_friend_dance') {
+            audio = this.sound.add('sfx_friend_voice');
+            audio.play();
         }
 
         video.on('play', () => {

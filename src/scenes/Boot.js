@@ -48,6 +48,7 @@ export class Boot extends Phaser.Scene {
         this.load.audio('bgm_main_menu', 'assets/Green Pixel Plains.mp3');
         this.load.audio('bgm_intro', 'assets/Wake_upBabi.mp3');
         this.load.audio('sfx_evil_friend', 'assets/evil_friend_voice.mp3');
+        this.load.audio('sfx_friend_voice', 'assets/Level2FriendVoice.mp3');
         this.load.audio('bgm_level1', 'assets/Level1BGM.mp3');
         this.load.audio('bgm_level2', 'assets/Level2BGM.mp3');
         this.load.audio('bgm_level3', 'assets/Level3BGM.mp3');
