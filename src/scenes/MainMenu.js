@@ -14,12 +14,7 @@ export class MainMenu extends Phaser.Scene {
         if (this.textures.exists('main_menu_bg')) {
             const bg = this.add.image(width / 2, height / 2, 'main_menu_bg');
             bg.setDisplaySize(width, height);
-        } else {
-            console.log('[MainMenu] main_menu_bg texture not available');
         }
-
-        // Debug label to confirm MainMenu loaded
-        this.add.text(10, 10, 'MainMenu loaded', { fontSize: '14px', fontFamily: 'monospace', color: '#FFFFFF' }).setDepth(2000);
 
         // Create "START GAME" button container
         const buttonWidth = 300;
