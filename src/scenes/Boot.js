@@ -43,6 +43,9 @@ export class Boot extends Phaser.Scene {
         this.load.image('gate_open4', 'assets/gate/gate_open4.png');
         this.load.image('gate_open5', 'assets/gate/gate_open5.png');
 
+        // Load background music
+        this.load.audio('bgm_main_menu', 'assets/Green Pixel Plains.mp3');
+
         // Display loading text
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;

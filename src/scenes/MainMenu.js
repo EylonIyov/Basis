@@ -7,6 +7,14 @@ export class MainMenu extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        // Play background music
+        if (!this.bgm) {
+            this.bgm = this.sound.add('bgm_main_menu', { loop: true, volume: 0.5 });
+            this.bgm.play();
+        } else if (!this.bgm.isPlaying) {
+            this.bgm.play();
+        }
+
         // Fallback solid background
         this.add.rectangle(width / 2, height / 2, width, height, 0x1A1A2E);
 
@@ -89,6 +97,11 @@ export class MainMenu extends Phaser.Scene {
     }
 
     startGame() {
+        // Stop music when starting game
+        if (this.bgm) {
+            this.bgm.stop();
+        }
+
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.scene.start('IntroVideo');
