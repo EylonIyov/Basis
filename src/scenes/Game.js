@@ -1294,11 +1294,9 @@ export class Game extends Phaser.Scene {
         const updateScale = () => {
             if (!video.width || !video.height) return;
             
-            const scaleX = width / video.width;
-            const scaleY = height / video.height;
-            const scale = Math.max(scaleX, scaleY);
-            
-            video.setScale(scale);
+            // User requested to scale to current size of window.
+            // "Too large" (cover) and "too small" (contain) suggests they want exact fit.
+            video.setDisplaySize(width, height);
         };
         
         // Initial scale attempt
