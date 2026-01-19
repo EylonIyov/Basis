@@ -282,7 +282,7 @@ export class Game extends Phaser.Scene {
 
             let sprite;
             if (this.textures.exists('gate_closed')) {
-                sprite = this.add.image(pixelPos.x, pixelPos.y, 'gate_closed');
+                sprite = this.add.sprite(pixelPos.x, pixelPos.y, 'gate_closed');
                 sprite.setDisplaySize(this.tileSize - 4, this.tileSize - 4);
             } else {
                 // Fallback placeholder
@@ -298,12 +298,16 @@ export class Game extends Phaser.Scene {
             sprite.setDepth(5);
 
             // Add label
-            const labelText = gateData.type === 'rule' ? '⚡' : '?';
-            const label = this.add.text(pixelPos.x, pixelPos.y, labelText, {
-                fontSize: '16px',
-                fontFamily: 'monospace',
-                color: '#FFFFFF'
-            }).setOrigin(0.5).setDepth(6);
+            let label = null;
+            // Only show label if using placeholder or if it's a rule gate
+            if (!this.textures.exists('gate_closed') || gateData.type === 'rule') {
+                const labelText = gateData.type === 'rule' ? '⚡' : '?';
+                label = this.add.text(pixelPos.x, pixelPos.y, labelText, {
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    color: '#FFFFFF'
+                }).setOrigin(0.5).setDepth(6);
+            }
 
             const gate = {
                 gridX: gateData.x,
@@ -713,13 +717,34 @@ export class Game extends Phaser.Scene {
             case 'GATE_IS_OPEN':
                 if (this.ruleManager.isRuleActive('GATE_IS_OPEN')) {
                     this.gates.forEach(gate => {
-                        gate.isOpen = true;
-                        this.tweens.add({
-                            targets: [gate.sprite, gate.label],
-                            alpha: 0.3,
-                            duration: 500,
-                            ease: 'Power2'
-                        });
+                        if (!gate.isOpen) {
+                            gate.isOpen = true;
+                            
+                            // Play animation if it's a sprite
+                            if (gate.sprite.play) {
+                                gate.sprite.play('gate_open_anim');
+                                // Ensure alpha is 1 (opaque)
+                                gate.sprite.setAlpha(1);
+                            } else {
+                                // Fallback for rectangle placeholders
+                                this.tweens.add({
+                                    targets: gate.sprite,
+                                    alpha: 0.3,
+                                    duration: 500,
+                                    ease: 'Power2'
+                                });
+                            }
+
+                            // Fade out label if it exists
+                            if (gate.label) {
+                                this.tweens.add({
+                                    targets: gate.label,
+                                    alpha: 0,
+                                    duration: 500,
+                                    ease: 'Power2'
+                                });
+                            }
+                        }
                     });
                 }
                 break;

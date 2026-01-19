@@ -36,6 +36,12 @@ export class Boot extends Phaser.Scene {
 
         // Load special wall textures
         this.load.image('wall_ladder', 'assets/ladder.png');
+        this.load.image('gate_closed', 'assets/gate/gate_closed.png');
+        this.load.image('gate_open1', 'assets/gate/gate_open1.png');
+        this.load.image('gate_open2', 'assets/gate/gate_open2.png');
+        this.load.image('gate_open3', 'assets/gate/gate_open3.png');
+        this.load.image('gate_open4', 'assets/gate/gate_open4.png');
+        this.load.image('gate_open5', 'assets/gate/gate_open5.png');
 
         // Display loading text
         const width = this.cameras.main.width;
@@ -80,6 +86,7 @@ export class Boot extends Phaser.Scene {
         const height = this.cameras.main.height;
         // Create player animations
         this.createPlayerAnimations();
+        this.createGateAnimations();
 
         // Generate all game assets
         const assetGenerator = new AssetGenerator(this);
@@ -120,6 +127,21 @@ export class Boot extends Phaser.Scene {
                     });
                 });
             });
+        });
+    }
+
+    createGateAnimations() {
+        this.anims.create({
+            key: 'gate_open_anim',
+            frames: [
+                { key: 'gate_open1' },
+                { key: 'gate_open2' },
+                { key: 'gate_open3' },
+                { key: 'gate_open4' },
+                { key: 'gate_open5' }
+            ],
+            frameRate: 10,
+            repeat: 0
         });
     }
 

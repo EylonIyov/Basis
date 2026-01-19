@@ -1198,10 +1198,26 @@ export class UIManager {
      * Open a gate with visual effect
      */
     openGate(gate) {
+        if (gate.isOpen) return;
         gate.isOpen = true;
 
         // Visual effect
-        if (gate.sprite) {
+        if (gate.sprite && gate.sprite.play) {
+            // Play animation
+            gate.sprite.play('gate_open_anim');
+            gate.sprite.setAlpha(1); // Ensure opaque
+            
+            // Fade out label if it exists
+            if (gate.label) {
+                this.scene.tweens.add({
+                    targets: gate.label,
+                    alpha: 0,
+                    duration: 500,
+                    ease: 'Power2'
+                });
+            }
+        } else if (gate.sprite) {
+            // Fallback for non-animated sprites
             this.scene.tweens.add({
                 targets: gate.sprite,
                 alpha: 0.3,
