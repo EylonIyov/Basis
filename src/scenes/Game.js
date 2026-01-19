@@ -1271,7 +1271,9 @@ export class Game extends Phaser.Scene {
                 onNextLevel: () => {
                     // Check if we are transitioning from Level 1 (index 0) to Level 2 (index 1)
                     if (this.levelManager.currentLevelIndex === 0) {
-                        this.playTransitionVideo('transition_l1_l2', nextLevelIndex);
+                        this.playTransitionVideo(['level1_evil_friend', 'transition_l1_l2'], nextLevelIndex);
+                    } else if (this.levelManager.currentLevelIndex === 1) {
+                        this.playTransitionVideo('transition_l2_l3', nextLevelIndex);
                     } else {
                         // Pass the next level index directly
                         this.scene.restart({ levelIndex: nextLevelIndex });
@@ -1287,48 +1289,72 @@ export class Game extends Phaser.Scene {
     }
 
     /**
-     * Play a transition video before moving to the next level
+     * Play a transition video or sequence of videos before moving to the next level
      */
-    playTransitionVideo(videoKey, nextLevelIndex) {
+    playTransitionVideo(videoKeyOrKeys, nextLevelIndex) {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         
-        // Create video
+        // Handle array of videos
+        if (Array.isArray(videoKeyOrKeys)) {
+            if (videoKeyOrKeys.length === 0) {
+                this.scene.restart({ levelIndex: nextLevelIndex });
+                return;
+            }
+            
+            const currentVideo = videoKeyOrKeys[0];
+            const remainingVideos = videoKeyOrKeys.slice(1);
+            
+            // Play first video, then recursively call with remaining
+            this.playSingleVideo(currentVideo, () => {
+                if (remainingVideos.length > 0) {
+                    this.playTransitionVideo(remainingVideos, nextLevelIndex);
+                } else {
+                    this.scene.restart({ levelIndex: nextLevelIndex });
+                }
+            });
+            return;
+        }
+        
+        // Handle single video
+        this.playSingleVideo(videoKeyOrKeys, () => {
+            this.scene.restart({ levelIndex: nextLevelIndex });
+        });
+    }
+
+    /**
+     * Helper to play a single video
+     */
+    playSingleVideo(videoKey, onComplete) {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
         const video = this.add.video(width / 2, height / 2, videoKey);
         
-        // Function to update scale - called immediately and on play
+        // Function to update scale
         const updateScale = () => {
             if (!video.width || !video.height) return;
-            
-            // User requested to scale to current size of window.
-            // "Too large" (cover) and "too small" (contain) suggests they want exact fit.
             video.setDisplaySize(width, height);
         };
         
-        // Initial scale attempt
         updateScale();
-        
-        video.setDepth(1000); // Ensure it's on top of everything including UI
-        
-        // Play video
+        video.setDepth(1000);
         video.play();
         
-        // Re-scale when playback starts (metadata definitely available)
         video.on('play', () => {
             updateScale();
-            // Double check after a frame just in case
             this.time.delayedCall(50, updateScale);
         });
         
-        // When video completes, restart scene with next level
         video.on('complete', () => {
-            this.scene.restart({ levelIndex: nextLevelIndex });
+            video.destroy();
+            if (onComplete) onComplete();
         });
 
-        // Also handle if video fails to load or play
         video.on('error', () => {
             console.error(`[Game] Failed to play video: ${videoKey}`);
-            this.scene.restart({ levelIndex: nextLevelIndex });
+            video.destroy();
+            if (onComplete) onComplete();
         });
     }
 
