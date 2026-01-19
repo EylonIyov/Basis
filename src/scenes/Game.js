@@ -80,6 +80,16 @@ export class Game extends Phaser.Scene {
         this.setupRuleListeners();
 
         console.log(`[Game] Level loaded: ${this.level.name}`);
+
+        // Handle BGM per level
+        if (this.bgm) {
+            this.bgm.stop();
+        }
+
+        if (this.levelManager.currentLevelIndex === 0) { // Level 1
+            this.bgm = this.sound.add('bgm_level1', { loop: true, volume: 0.5 });
+            this.bgm.play();
+        }
     }
 
     /**
@@ -1366,6 +1376,13 @@ export class Game extends Phaser.Scene {
         video.setDepth(1000);
         video.play();
         
+        // Play associated audio if specific video
+        let audio;
+        if (videoKey === 'level1_evil_friend') {
+            audio = this.sound.add('sfx_evil_friend');
+            audio.play();
+        }
+
         video.on('play', () => {
             updateScale();
             this.time.delayedCall(50, updateScale);
@@ -1373,12 +1390,20 @@ export class Game extends Phaser.Scene {
         
         video.on('complete', () => {
             video.destroy();
+            if (audio) {
+                audio.stop();
+                audio.destroy();
+            }
             if (onComplete) onComplete();
         });
 
         video.on('error', () => {
             console.error(`[Game] Failed to play video: ${videoKey}`);
             video.destroy();
+            if (audio) {
+                audio.stop();
+                audio.destroy();
+            }
             if (onComplete) onComplete();
         });
     }
@@ -1392,6 +1417,13 @@ export class Game extends Phaser.Scene {
             this.backgroundVideo.stop();
             this.backgroundVideo.destroy();
             this.backgroundVideo = null;
+        }
+
+        // Clean up BGM
+        if (this.bgm) {
+            this.bgm.stop();
+            this.bgm.destroy();
+            this.bgm = null;
         }
 
         // Clean up entities

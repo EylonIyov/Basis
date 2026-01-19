@@ -45,6 +45,9 @@ export class Boot extends Phaser.Scene {
 
         // Load background music
         this.load.audio('bgm_main_menu', 'assets/Green Pixel Plains.mp3');
+        this.load.audio('bgm_intro', 'assets/Wake_upBabi.mp3');
+        this.load.audio('sfx_evil_friend', 'assets/evil_friend_voice.mp3');
+        this.load.audio('bgm_level1', 'assets/Level1BGM.mp3');
 
         // Display loading text
         const width = this.cameras.main.width;

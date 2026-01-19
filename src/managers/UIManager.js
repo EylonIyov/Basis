@@ -1329,7 +1329,7 @@ export class UIManager {
         });
 
         // Auto-transition after 3 seconds
-        this.scene.time.delayedCall(3000, () => {
+        const autoTransitionTimer = this.scene.time.delayedCall(3000, () => {
             // Animate out
             this.scene.tweens.add({
                 targets: winContainer,
@@ -1361,6 +1361,7 @@ export class UIManager {
         if (hasNextLevel) {
             this.scene.input.keyboard.once('keydown-N', () => {
                 countdownInterval.remove();
+                autoTransitionTimer.remove();
                 winContainer.destroy();
                 if (callbacks.onNextLevel) callbacks.onNextLevel();
             });
@@ -1368,6 +1369,7 @@ export class UIManager {
 
         this.scene.input.keyboard.once('keydown-R', () => {
             countdownInterval.remove();
+            autoTransitionTimer.remove();
             winContainer.destroy();
             if (callbacks.onRestart) callbacks.onRestart();
         });

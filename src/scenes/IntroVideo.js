@@ -21,6 +21,14 @@ export class IntroVideo extends Phaser.Scene {
         
         // Play video
         video.play();
+
+        // Play intro music when video starts playing
+        this.bgm = this.sound.add('bgm_intro', { volume: 0.5 });
+        video.on('play', () => {
+            if (!this.bgm.isPlaying) {
+                this.bgm.play();
+            }
+        });
         
         // Handle video completion
         video.on('complete', () => {
@@ -38,6 +46,11 @@ export class IntroVideo extends Phaser.Scene {
     finishIntro() {
         if (this.isFinishing) return;
         this.isFinishing = true;
+
+        // Stop music
+        if (this.bgm) {
+            this.bgm.stop();
+        }
 
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
