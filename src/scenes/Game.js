@@ -92,6 +92,9 @@ export class Game extends Phaser.Scene {
         } else if (this.levelManager.currentLevelIndex === 1) { // Level 2
             this.bgm = this.sound.add('bgm_level2', { loop: true, volume: 0.5 });
             this.bgm.play();
+        } else if (this.levelManager.currentLevelIndex === 2) { // Level 3
+            this.bgm = this.sound.add('bgm_level3', { loop: true, volume: 0.5 });
+            this.bgm.play();
         }
     }
 
@@ -1291,6 +1294,11 @@ export class Game extends Phaser.Scene {
         // Stop the timer
         this.uiManager.stopTimer();
 
+        // Stop BGM
+        if (this.bgm) {
+            this.bgm.stop();
+        }
+
         // Disable input
         this.input.keyboard.enabled = false;
 
@@ -1311,7 +1319,7 @@ export class Game extends Phaser.Scene {
                     if (this.levelManager.currentLevelIndex === 0) {
                         this.playTransitionVideo(['level1_evil_friend', 'transition_l1_l2'], nextLevelIndex);
                     } else if (this.levelManager.currentLevelIndex === 1) {
-                        this.playTransitionVideo('transition_l2_l3', nextLevelIndex);
+                        this.playTransitionVideo(['level2_friend_dance', 'transition_l2_l3'], nextLevelIndex);
                     } else {
                         // Pass the next level index directly
                         this.scene.restart({ levelIndex: nextLevelIndex });
@@ -1380,7 +1388,7 @@ export class Game extends Phaser.Scene {
         video.play();
         
         // Stop BGM for specific videos
-        if (videoKey === 'level1_evil_friend' || videoKey === 'transition_l2_l3') {
+        if (videoKey === 'level1_evil_friend' || videoKey === 'transition_l2_l3' || videoKey === 'level2_friend_dance') {
              if (this.bgm && this.bgm.isPlaying) {
                 this.bgm.stop();
             }

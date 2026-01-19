@@ -18,6 +18,7 @@ export class Boot extends Phaser.Scene {
         this.load.video('transition_l1_l2', 'assets/transitionLevel1Level2.mp4', true);
         this.load.video('level1_evil_friend', 'assets/level1EvilFriend.mp4', true);
         this.load.video('transition_l2_l3', 'assets/transitionLevel2Level3.mp4', true);
+        this.load.video('level2_friend_dance', 'assets/Level2FriendDance.mp4', true);
 
         // Load player animation assets
         this.load.image('player_idle', 'assets/idle.png');
@@ -49,6 +50,7 @@ export class Boot extends Phaser.Scene {
         this.load.audio('sfx_evil_friend', 'assets/evil_friend_voice.mp3');
         this.load.audio('bgm_level1', 'assets/Level1BGM.mp3');
         this.load.audio('bgm_level2', 'assets/Level2BGM.mp3');
+        this.load.audio('bgm_level3', 'assets/Level3BGM.mp3');
 
         // Display loading text
         const width = this.cameras.main.width;
