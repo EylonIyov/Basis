@@ -1263,8 +1263,13 @@ export class Game extends Phaser.Scene {
             
             this.uiManager.showWinScreen(this.level.name, hasNextLevel, isLastLevel, {
                 onNextLevel: () => {
-                    // Pass the next level index directly
-                    this.scene.restart({ levelIndex: nextLevelIndex });
+                    // Check if we are transitioning from Level 1 (index 0) to Level 2 (index 1)
+                    if (this.levelManager.currentLevelIndex === 0) {
+                        this.playTransitionVideo('transition_l1_l2', nextLevelIndex);
+                    } else {
+                        // Pass the next level index directly
+                        this.scene.restart({ levelIndex: nextLevelIndex });
+                    }
                 },
                 onRestart: () => {
                     // On last level, R goes back to level 1; otherwise restart current
@@ -1272,6 +1277,54 @@ export class Game extends Phaser.Scene {
                     this.scene.restart({ levelIndex: restartIndex });
                 }
             });
+        });
+    }
+
+    /**
+     * Play a transition video before moving to the next level
+     */
+    playTransitionVideo(videoKey, nextLevelIndex) {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        // Create video
+        const video = this.add.video(width / 2, height / 2, videoKey);
+        
+        // Function to update scale - called immediately and on play
+        const updateScale = () => {
+            if (!video.width || !video.height) return;
+            
+            const scaleX = width / video.width;
+            const scaleY = height / video.height;
+            const scale = Math.max(scaleX, scaleY);
+            
+            video.setScale(scale);
+        };
+        
+        // Initial scale attempt
+        updateScale();
+        
+        video.setDepth(1000); // Ensure it's on top of everything including UI
+        
+        // Play video
+        video.play();
+        
+        // Re-scale when playback starts (metadata definitely available)
+        video.on('play', () => {
+            updateScale();
+            // Double check after a frame just in case
+            this.time.delayedCall(50, updateScale);
+        });
+        
+        // When video completes, restart scene with next level
+        video.on('complete', () => {
+            this.scene.restart({ levelIndex: nextLevelIndex });
+        });
+
+        // Also handle if video fails to load or play
+        video.on('error', () => {
+            console.error(`[Game] Failed to play video: ${videoKey}`);
+            this.scene.restart({ levelIndex: nextLevelIndex });
         });
     }
 

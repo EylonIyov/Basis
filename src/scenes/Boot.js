@@ -15,6 +15,7 @@ export class Boot extends Phaser.Scene {
         this.load.video('bg_video_level1', 'assets/background video.mp4', true);
         this.load.video('bg_video_level2', 'assets/video level 2.mp4', true);
         this.load.video('bg_video_level3', 'assets/Level3Background.mp4', true);
+        this.load.video('transition_l1_l2', 'assets/transitionLevel1Level2.mp4', true);
 
         // Load player animation assets
         this.load.image('player_idle', 'assets/idle.png');
