@@ -89,6 +89,9 @@ export class Game extends Phaser.Scene {
         if (this.levelManager.currentLevelIndex === 0) { // Level 1
             this.bgm = this.sound.add('bgm_level1', { loop: true, volume: 0.5 });
             this.bgm.play();
+        } else if (this.levelManager.currentLevelIndex === 1) { // Level 2
+            this.bgm = this.sound.add('bgm_level2', { loop: true, volume: 0.5 });
+            this.bgm.play();
         }
     }
 
@@ -1376,6 +1379,13 @@ export class Game extends Phaser.Scene {
         video.setDepth(1000);
         video.play();
         
+        // Stop BGM for specific videos
+        if (videoKey === 'level1_evil_friend' || videoKey === 'transition_l2_l3') {
+             if (this.bgm && this.bgm.isPlaying) {
+                this.bgm.stop();
+            }
+        }
+
         // Play associated audio if specific video
         let audio;
         if (videoKey === 'level1_evil_friend') {
