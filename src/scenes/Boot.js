@@ -19,6 +19,7 @@ export class Boot extends Phaser.Scene {
         this.load.video('level1_evil_friend', 'assets/level1EvilFriend.mp4', true);
         this.load.video('transition_l2_l3', 'assets/transitionLevel2Level3.mp4', true);
         this.load.video('level2_friend_dance', 'assets/Level2FriendDance.mp4', true);
+        this.load.video('final_video', 'assets/FinalVideo.mp4', true);
 
         // Load player animation assets
         this.load.image('player_idle', 'assets/idle.png');

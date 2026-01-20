@@ -1324,11 +1324,23 @@ export class Game extends Phaser.Scene {
                     }
                 },
                 onRestart: () => {
-                    // On last level, R goes back to level 1; otherwise restart current
-                    const restartIndex = isLastLevel ? 0 : this.levelManager.currentLevelIndex;
-                    this.scene.restart({ levelIndex: restartIndex });
+                    // On last level, play final video then go back to main menu
+                    if (isLastLevel) {
+                        this.playFinalVideo();
+                    } else {
+                        this.scene.restart({ levelIndex: this.levelManager.currentLevelIndex });
+                    }
                 }
             });
+        });
+    }
+
+    /**
+     * Play the final video after completing the last level, then return to main menu
+     */
+    playFinalVideo() {
+        this.playSingleVideo('final_video', () => {
+            this.scene.start('MainMenu');
         });
     }
 
