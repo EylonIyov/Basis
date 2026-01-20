@@ -649,19 +649,6 @@ export class Game extends Phaser.Scene {
         this.lastInputTime = 0;
         this.inputDelay = 150; // ms between inputs
 
-        // DEBUG: Press Q to jump to level 1, W to jump to level 2, E to jump to level 3
-        this.input.keyboard.on('keydown-Q', () => {
-            console.log('[DEBUG] Jumping to Level 1');
-            this.scene.restart({ levelIndex: 1 });
-        });
-        this.input.keyboard.on('keydown-W', () => {
-            console.log('[DEBUG] Jumping to Level 2');
-            this.scene.restart({ levelIndex: 2 });
-        });
-        this.input.keyboard.on('keydown-E', () => {
-            console.log('[DEBUG] Jumping to Level 3');
-            this.scene.restart({ levelIndex: 3 });
-        });
     }
 
     /**

@@ -164,14 +164,6 @@ export class UIManager {
         this.hudContainer.add(this.timerText);
         this.updateTimerDisplay();
 
-        // Active rules display (initially empty)
-        this.activeRulesText = this.scene.add.text(0, 72, '', {
-            fontSize: '12px',
-            fontFamily: 'monospace',
-            color: '#3498DB'
-        });
-        this.hudContainer.add(this.activeRulesText);
-
         // Pause button (top right)
         const pauseBtn = this.scene.add.rectangle(width - 50, 15, 70, 30, 0x34495E);
         pauseBtn.setStrokeStyle(2, 0xF1C40F);
@@ -1241,19 +1233,10 @@ export class UIManager {
     }
 
     /**
-     * Update active rules display
+     * Update active rules display (Disabled)
      */
     updateActiveRules() {
-        if (!this.ruleManager) return;
 
-        const activeRules = this.ruleManager.getActiveRules();
-        
-        if (activeRules.length === 0) {
-            this.activeRulesText.setText('');
-        } else {
-            const ruleTexts = activeRules.map(rule => `• ${rule.id.replace(/_/g, ' ')}`);
-            this.activeRulesText.setText('Active Rules:\n' + ruleTexts.join('\n'));
-        }
     }
 
     /**
