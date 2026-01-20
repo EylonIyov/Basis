@@ -198,10 +198,10 @@ export class GridPhysics {
         const wall = this.walls.find(w => w.gridX === gridX && w.gridY === gridY);
         if (!wall) return false;
         
+        const wallType = wall.type || 'brick';
+        
         // Check if this wall type has been made passable
         if (this.ruleManager) {
-            const wallType = wall.type || 'brick';
-            
             // Check type-specific rules
             switch (wallType) {
                 case 'brick':
