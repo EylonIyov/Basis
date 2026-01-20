@@ -177,16 +177,18 @@ export class Game extends Phaser.Scene {
             videoKey
         );
 
-        // Scale video to cover the entire screen
-        const scaleX = this.cameras.main.width / video.width;
-        const scaleY = this.cameras.main.height / video.height;
-        const scale = Math.max(scaleX, scaleY);
-        video.setScale(scale);
+        // Scale video to fit the current window size exactly
+        video.setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
         video.setDepth(0);
         video.setLoop(true);
         video.setMute(true);
         video.play();
+
+        // Update size when video metadata loads (ensures correct scaling)
+        video.on('play', () => {
+            video.setDisplaySize(this.cameras.main.width, this.cameras.main.height);
+        });
 
         // Store reference for cleanup
         this.backgroundVideo = video;
