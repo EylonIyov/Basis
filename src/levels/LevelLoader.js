@@ -20,6 +20,7 @@
  * 13 = Diamond Wall (light cyan crystal)
  * 14 = Lapis Wall (dark blue stone)
  * 15 = Quartz Wall (white/pink crystal)
+ * 16 = Ladder Wall (climbable ladder visual)
  */
 export class LevelLoader {
     constructor() {
@@ -203,6 +204,16 @@ export class LevelLoader {
                             width: 1, 
                             height: 1,
                             type: 'quartz'
+                        });
+                        break;
+                    
+                    case 16: // Ladder Wall
+                        level.walls.push({ 
+                            x, 
+                            y, 
+                            width: 1, 
+                            height: 1,
+                            type: 'ladder'
                         });
                         break;
                     

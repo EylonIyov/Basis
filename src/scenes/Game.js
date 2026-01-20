@@ -244,7 +244,8 @@ export class Game extends Phaser.Scene {
             gold: { fill: 0xF1C40F, stroke: 0xB7950B },
             diamond: { fill: 0x85C1E9, stroke: 0x3498DB },
             lapis: { fill: 0x1A5276, stroke: 0x0E2F44 },
-            quartz: { fill: 0xFADBD8, stroke: 0xE6B0AA }
+            quartz: { fill: 0xFADBD8, stroke: 0xE6B0AA },
+            ladder: { fill: 0x8B6914, stroke: 0x5D4710 }
         };
 
         this.level.walls.forEach(wallData => {
@@ -252,15 +253,20 @@ export class Game extends Phaser.Scene {
             const wallType = wallData.type || 'brick';
             const textureKey = `wall_${wallType}`;
 
+            // Ladder is a special decorative type - scaled up to fill tile, background depth
+            const isLadder = wallType === 'ladder';
+            // Ladder image has transparent padding, so scale it up to 1.5x tile size
+            const displaySize = isLadder ? this.tileSize * 1.5 : this.tileSize - 2;
+
             let sprite;
             if (this.textures.exists(textureKey)) {
                 // Use specific texture for this wall type
                 sprite = this.add.image(pixelPos.x, pixelPos.y, textureKey);
-                sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+                sprite.setDisplaySize(displaySize, displaySize);
             } else if (wallType === 'brick' && this.textures.exists('wall')) {
                 // Only use generic 'wall' texture for brick type
                 sprite = this.add.image(pixelPos.x, pixelPos.y, 'wall');
-                sprite.setDisplaySize(this.tileSize - 2, this.tileSize - 2);
+                sprite.setDisplaySize(displaySize, displaySize);
             } else {
                 // Fallback placeholder with type-specific color
                 const colors = fallbackColors[wallType] || fallbackColors.brick;
@@ -272,7 +278,8 @@ export class Game extends Phaser.Scene {
                 sprite.setStrokeStyle(2, colors.stroke);
             }
 
-            sprite.setDepth(3);
+            // Ladders go behind player (depth 1), regular walls in front (depth 3)
+            sprite.setDepth(isLadder ? 1 : 3);
 
             const wall = {
                 gridX: wallData.x,
@@ -849,7 +856,8 @@ export class Game extends Phaser.Scene {
             gold: 0xF1C40F,
             diamond: 0x85C1E9,
             lapis: 0x1A5276,
-            quartz: 0xFADBD8
+            quartz: 0xFADBD8,
+            ladder: 0x8B6914
         };
 
         // Fallback colors for wall rendering
@@ -862,7 +870,8 @@ export class Game extends Phaser.Scene {
             gold: { fill: 0xF1C40F, stroke: 0xB7950B },
             diamond: { fill: 0x85C1E9, stroke: 0x3498DB },
             lapis: { fill: 0x1A5276, stroke: 0x0E2F44 },
-            quartz: { fill: 0xFADBD8, stroke: 0xE6B0AA }
+            quartz: { fill: 0xFADBD8, stroke: 0xE6B0AA },
+            ladder: { fill: 0x8B6914, stroke: 0x5D4710 }
         };
 
         const fromColor = typeColors[fromType] || 0x888888;
